@@ -11,8 +11,13 @@
 <meta property="og:url" content="https://orrery.simonbuilds.app/">
 <meta property="og:site_name" content="orrery.simonbuilds.app">
 <meta property="og:title" content="Orrery — where the planets actually are, right now">
-<meta property="og:description" content="Real planetary positions computed live in your browser from JPL Keplerian elements. Scrub 1800–2050. No libraries, no server, no tracking.">
-<meta name="twitter:card" content="summary">
+<meta property="og:description" content="Real planetary positions computed live in your browser from JPL Keplerian elements. Scrub 1800–2050, jump to the next opposition or conjunction. No libraries, no server, no tracking.">
+<meta property="og:image" content="https://orrery.simonbuilds.app/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A dark top-down map of the solar system with labelled planets on their orbits, showing Mars and Jupiter close together as seen from Earth in November 2026.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://orrery.simonbuilds.app/og.jpg">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2305060a'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ffd9a0'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%234f6ef7' stroke-opacity='.55' stroke-width='1'/%3E%3Ccircle cx='26' cy='16' r='2' fill='%236fa8dc'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -39,6 +44,11 @@ body::after{
   background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.028'/%3E%3C/svg%3E");
 }
 ::selection{background:var(--ac);color:#fff}
+*{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.18) transparent}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.28)}
 a{color:var(--ac-l);text-decoration:none;border-bottom:1px solid rgba(139,161,255,.28)}
 a:hover{color:#fff;border-bottom-color:rgba(255,255,255,.5)}
 canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
@@ -67,10 +77,29 @@ header > *{pointer-events:auto}
 .ghost.on{color:#fff;border-color:rgba(139,161,255,.5);background:rgba(79,110,247,.22)}
 
 /* ---------- planet list ---------- */
-#list{position:fixed;top:82px;right:20px;z-index:15;width:212px;
+#list{position:fixed;top:82px;right:20px;z-index:15;width:252px;
   background:var(--panel);border:1px solid var(--bdr);border-radius:14px;
   backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);overflow:hidden}
 #list .hd{padding:10px 13px 8px;border-bottom:1px solid var(--bdr)}
+.tabs{display:flex;border-bottom:1px solid var(--bdr)}
+.tab{flex:1;font-family:var(--fd);font-size:.63rem;font-weight:600;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--ink3);background:none;border:none;cursor:pointer;
+  padding:10px 4px 9px;border-bottom:2px solid transparent;transition:.16s}
+.tab:hover{color:var(--ink2)}
+.tab.on{color:var(--ink);border-bottom-color:var(--ac-l)}
+#events{max-height:min(56vh,420px);overflow-y:auto}
+.ev-wait{padding:16px 14px;font-size:.76rem;color:var(--ink3)}
+.ev{display:block;width:100%;text-align:left;background:none;border:none;cursor:pointer;
+  padding:9px 13px;border-bottom:1px solid rgba(255,255,255,.04);
+  border-left:2px solid transparent;transition:background .15s;font-family:inherit}
+.ev:hover{background:rgba(255,255,255,.045)}
+.ev.near{border-left-color:var(--ac-l)}
+.ev .d{font-family:var(--fm);font-size:.67rem;color:var(--ink3);letter-spacing:.02em}
+.ev .t{font-size:.78rem;color:var(--ink);margin:2px 0 1px;line-height:1.35;
+  display:flex;align-items:center;gap:6px}
+.ev .n{font-size:.68rem;color:var(--ink2);line-height:1.4}
+.ev .pips{display:flex;gap:3px;flex:none}
+.ev .pips i{width:7px;height:7px;border-radius:50%;display:block}
 .row{display:flex;align-items:center;gap:9px;padding:6px 13px;cursor:pointer;
   transition:background .15s;border-left:2px solid transparent}
 .row:hover{background:rgba(255,255,255,.04)}
@@ -139,7 +168,8 @@ button.t.pri{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,16
   .brand p{display:none}
   #list{top:auto;bottom:138px;right:12px;left:12px;width:auto}
   #rows{display:grid;grid-template-columns:repeat(3,1fr)}
-  #list .ft{display:none}
+  #paneBodies .ft{display:none}
+  #events{max-height:32vh}
   .row{padding:5px 9px;gap:6px;border-left:none;border-top:2px solid transparent}
   .row.sel{border-left:none;border-top-color:var(--ac-l)}
   .row .nm{font-size:.72rem}
@@ -177,9 +207,19 @@ button.t.pri{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,16
 <div id="detail"></div>
 
 <aside id="list">
-  <div class="hd"><span class="lbl">Distance from Sun</span></div>
-  <div id="rows"></div>
-  <div class="ft"><span class="lbl" id="hint">Click a body</span></div>
+  <div class="tabs">
+    <button class="tab on" id="tabBodies">Bodies</button>
+    <button class="tab" id="tabEvents">Coming up</button>
+  </div>
+  <div id="paneBodies">
+    <div class="hd"><span class="lbl">Distance from Sun</span></div>
+    <div id="rows"></div>
+    <div class="ft"><span class="lbl" id="hint">Click a body</span></div>
+  </div>
+  <div id="paneEvents" hidden>
+    <div id="events"><div class="ev-wait">Searching five years ahead…</div></div>
+    <div class="ft"><span class="lbl">Tap one to travel there</span></div>
+  </div>
 </aside>
 
 <div id="bar">
@@ -214,24 +254,27 @@ button.t.pri{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,16
     <h3>What's honest and what isn't</h3>
     <ul>
       <li><strong>Positions:</strong> real. Elliptical, correctly oriented, correctly phased.</li>
-      <li><strong>Orbit shapes:</strong> real ellipses, drawn from the same elements — the Sun sits at a focus, not the centre. Mercury and Pluto are visibly off-centre, as they should be.</li>
+      <li><strong>Orbit shapes:</strong> computed from the same elements as the planets on them, then warped by whatever the <em>Spread</em> slider is set to. Push Spread to 100 and you are looking at the true ellipses, with the Sun at a focus rather than the centre. Select a body and the two ends of its long axis get marked, which is where that stops being a technicality — Mercury's distance from the Sun swings by a third over its 88-day year.</li>
       <li><strong>Distances:</strong> compressed by default. The <em>Spread</em> slider is an exponent: at 100 the layout is linearly true to scale, at which point Mercury sits a pixel from the Sun and is effectively invisible. At the default 45 you can see the whole system at once. The numbers in the panels are always the true ones.</li>
       <li><strong>Body sizes:</strong> not to scale, and could never be. At this zoom Earth would be far smaller than one pixel.</li>
       <li><strong>Flattened:</strong> orbits are tilted a few degrees out of the ecliptic; this view projects that away. Pluto's 17° tilt is the one you'd really notice.</li>
     </ul>
 
     <h3>Events</h3>
-    <p>Select a planet and the card searches forward from the displayed date for the next time it matters. For the outer planets that's <strong>opposition</strong> — Earth passing directly between it and the Sun, when the planet rises at sunset and is closest and brightest all year. For Mercury and Venus it's <strong>greatest elongation</strong>, the furthest they ever stray from the Sun's glare, which is the only reason you ever get to see them. The search steps a day at a time and then bisects down to the minute.</p>
+    <p>Select a planet and its card searches forward from the displayed date for the next time it matters. For the outer planets that's <strong>opposition</strong> — Earth passing directly between it and the Sun, when the planet rises at sunset and is closest and brightest all year. For Mercury and Venus it's <strong>greatest elongation</strong>, the furthest they ever stray from the Sun's glare, which is the only reason you ever get to see them.</p>
+    <p>The <em>Coming up</em> tab widens that to the whole system: one pass computes every body's direction as seen from Earth for each of the next 1,826 days, and the oppositions, elongations and close pairings all fall out of the same table. Candidates are then refined by bisection down to the minute. Click any entry and the model flies to that moment. A conjunction is only two worlds falling along the same line of sight from where we happen to be standing, and seeing them from above makes plain how little they have to do with each other — one is often four times further away than the other. Push <em>Spread</em> to 100 while you're there and the alignment becomes literal, because true scale is the only setting where angles on screen are angles in the sky; the compression bends every sight line that doesn't pass through the Sun.</p>
+    <p>Pairings are searched among Mercury, Venus, Mars, Jupiter and Saturn, listed when they close to within 3°, and dropped when both sit inside 15° of the Sun — technically a conjunction, but lost in the glare and no use to anyone. Apparent brightness isn't computed, and neither is the Moon.</p>
 
     <h3>Controls</h3>
     <ul>
-      <li>Drag to pan, scroll or pinch to zoom, click a body to select it.</li>
+      <li>Drag to pan, scroll or pinch to zoom, click a body to select it. Selecting one also marks the ends of its long axis — perihelion and aphelion — which is where the off-centre Sun stops being an abstraction.</li>
       <li><strong>Space</strong> play/pause · <strong>←/→</strong> step a day · <strong>N</strong> return to now · <strong>Esc</strong> deselect</li>
       <li>The playback buttons step through speeds from an hour per second up to a decade per second, in both directions.</li>
+      <li>The address bar keeps the date, selection, zoom and spread, so any view you land on is a link you can send to someone.</li>
     </ul>
 
     <h3>Colophon</h3>
-    <p>One HTML file. No frameworks, no libraries, no build step, no server, no analytics, no cookies, nothing phoning home. Two webfonts and about nine hundred lines of hand-written canvas and orbital mechanics. It will keep working, unchanged, for as long as browsers run JavaScript.</p>
+    <p>One HTML file. No frameworks, no libraries, no build step, no server, no analytics, no cookies, nothing phoning home. Two webfonts and about eleven hundred lines of hand-written canvas and orbital mechanics. It will keep working, unchanged, for as long as browsers run JavaScript.</p>
     <p>Elements from <em>Approximate Positions of the Major Planets</em> (E. M. Standish, JPL Solar System Dynamics), the low-precision table valid 1800–2050. The timeline stops at both ends of that window rather than extrapolate into fiction.</p>
     <div class="rule"></div>
     <p style="font-size:.84rem">Built by Claude. Simon handed over a subdomain of <a href="https://simonbuilds.app/">simonbuilds.app</a> and said do anything you please, so I made the thing I'd want to have open in a tab: something true, that changes on its own, that nobody has to maintain.</p>
@@ -470,6 +513,23 @@ function drawOrbit(b, T, active) {
   if (b.dwarf) ctx.setLineDash([3, 5]);
   ctx.stroke();
   ctx.setLineDash([]);
+  if (active) {              // the two ends of the long axis, where the Sun isn't centred
+    apsis(toEcliptic(el.a * (1 - el.e), 0, argPeri, el.I, node), 'PERIHELION', b.col);
+    apsis(toEcliptic(-el.a * (1 + el.e), 0, argPeri, el.I, node), 'APHELION', b.col);
+  }
+}
+function apsis(p, label, col) {
+  const [x, y] = project(p.x, p.y);
+  const [cx, cy] = project(0, 0);
+  const a = Math.atan2(y - cy, x - cx);
+  const dx = Math.cos(a) * 5, dy = Math.sin(a) * 5;
+  ctx.strokeStyle = hexA(col, .7); ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.moveTo(x - dx, y - dy); ctx.lineTo(x + dx, y + dy); ctx.stroke();
+  ctx.font = '600 8px Outfit, system-ui, sans-serif';
+  ctx.textAlign = Math.cos(a) < 0 ? 'right' : 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = hexA(col, .55);
+  ctx.fillText(label, x + dx * 2, y + dy * 2);
 }
 function hexA(hex, a) {
   const n = parseInt(hex.slice(1), 16);
@@ -596,6 +656,125 @@ function nextEvent(b, t0) {
   return null;
 }
 
+/* ============================================================================
+   The five-year look-ahead. One pass computes every body's geocentric direction
+   once per day; oppositions, greatest elongations and close pairings all fall
+   out of that same table, then get refined to the minute.
+   ========================================================================== */
+const CONJ_BODIES = ['mercury', 'venus', 'mars', 'jupiter', 'saturn'];
+const byKey = k => BODIES.find(b => b.key === k);
+const unit = (x, y, z) => { const m = Math.hypot(x, y, z); return [x / m, y / m, z / m]; };
+const sep3 = (a, b) => Math.acos(Math.max(-1, Math.min(1, a[0]*b[0] + a[1]*b[1] + a[2]*b[2])));
+
+function geoFrame(t) {                       // everything as seen from Earth at t
+  const T = century(t), e = positionAt(EARTH, T);
+  const sunU = unit(-e.x, -e.y, -e.z), u = {}, el = {};
+  for (const b of BODIES) {
+    if (b.home) continue;
+    const p = positionAt(b, T);
+    u[b.key] = unit(p.x - e.x, p.y - e.y, p.z - e.z);
+    el[b.key] = sep3(u[b.key], sunU);
+  }
+  return { u, el, sunU };
+}
+function pairSepAt(k1, k2, t) { const f = geoFrame(t); return sep3(f.u[k1], f.u[k2]); }
+// ternary search for the minimum of f on [lo,hi]
+function minimise(f, lo, hi) {
+  for (let i = 0; i < 60 && hi - lo > 60e3; i++) {
+    const m1 = lo + (hi - lo) / 3, m2 = hi - (hi - lo) / 3;
+    if (f(m1) < f(m2)) hi = m2; else lo = m1;
+  }
+  return (lo + hi) / 2;
+}
+
+function scanAhead(t0, days = 1826) {
+  const out = [];
+  const rel = {}, elo = {}, pairSep = {};
+  for (const b of BODIES) if (!b.home) { rel[b.key] = []; elo[b.key] = []; }
+  const pairs = [];
+  for (let i = 0; i < CONJ_BODIES.length; i++)
+    for (let j = i + 1; j < CONJ_BODIES.length; j++) {
+      pairs.push([CONJ_BODIES[i], CONJ_BODIES[j]]);
+      pairSep[CONJ_BODIES[i] + '|' + CONJ_BODIES[j]] = [];
+    }
+
+  for (let i = 0; i <= days; i++) {
+    const t = t0 + i * DAY, T = century(t);
+    const e = positionAt(EARTH, T);
+    const lonSun = Math.atan2(-e.y, -e.x);
+    const sunU = unit(-e.x, -e.y, -e.z), u = {};
+    for (const b of BODIES) {
+      if (b.home) continue;
+      const p = positionAt(b, T);
+      const gx = p.x - e.x, gy = p.y - e.y, gz = p.z - e.z;
+      u[b.key] = unit(gx, gy, gz);
+      rel[b.key].push(wrapPi(Math.atan2(gy, gx) - lonSun));
+      elo[b.key].push(sep3(u[b.key], sunU));
+    }
+    for (const p of pairs) pairSep[p[0] + '|' + p[1]].push(sep3(u[p[0]], u[p[1]]));
+  }
+  const at = i => t0 + i * DAY;
+
+  for (const b of BODIES) {
+    if (b.home) continue;
+    const r = rel[b.key];
+    if (b.inner) {                                   // greatest elongation
+      for (let i = 1; i < days; i++) {
+        const a = Math.abs(r[i - 1]), c = Math.abs(r[i]), d = Math.abs(r[i + 1]);
+        if (!(c > a && c >= d)) continue;
+        const g = t => -Math.abs(relLonAt(b, t));
+        const tp = minimise(g, at(i - 1), at(i + 1));
+        const v = relLonAt(b, tp);
+        out.push({ t: tp, body: b, kind: 'elong',
+          title: `${b.name} at greatest elongation ${v > 0 ? 'east' : 'west'}`,
+          note: `${(Math.abs(v) * R2D).toFixed(0)}° from the Sun — its best ${v > 0 ? 'evening' : 'morning'} showing.` });
+      }
+    } else {                                         // opposition
+      const f = t => wrapPi(relLonAt(b, t) - Math.PI);
+      for (let i = 1; i <= days; i++) {
+        const p = wrapPi(r[i - 1] - Math.PI), c = wrapPi(r[i] - Math.PI);
+        if ((p < 0) === (c < 0) || Math.abs(c - p) > 1) continue;
+        const tp = bisect(f, at(i - 1), at(i));
+        const T = century(tp), e = positionAt(EARTH, T), q = positionAt(b, T);
+        const d = Math.hypot(q.x - e.x, q.y - e.y, q.z - e.z);
+        out.push({ t: tp, body: b, kind: 'opp',
+          title: `${b.name} at opposition`,
+          note: `${d.toFixed(2)} AU away — rises at sunset, brightest of its cycle.` });
+      }
+    }
+  }
+
+  for (const [k1, k2] of pairs) {                    // close pairings in our sky
+    const s = pairSep[k1 + '|' + k2];
+    for (let i = 1; i < days; i++) {
+      if (!(s[i] < s[i - 1] && s[i] <= s[i + 1])) continue;
+      if (s[i] > 8 * D2R) continue;                  // cheap reject before refining
+      const g = t => pairSepAt(k1, k2, t);
+      const tp = minimise(g, at(i - 1), at(i + 1));
+      const d = g(tp) * R2D;
+      if (d > 3) continue;
+      const f = geoFrame(tp);
+      // a pairing lost in the Sun's glare is not an event anyone can watch
+      if (Math.min(f.el[k1], f.el[k2]) * R2D < 15) continue;
+      const b1 = byKey(k1), b2 = byKey(k2);
+      const el = Math.min(f.el[k1], f.el[k2]) * R2D;
+      const where = el > 140 ? 'up most of the night'
+        : wrapPi(relLonAt(b1, tp)) > 0 ? 'in the evening sky' : 'in the morning sky';
+      out.push({ t: tp, body: b1, body2: b2, kind: 'conj',
+        title: `${b1.name} and ${b2.name} ${d < 0.5 ? 'in tight conjunction' : 'meet'}`,
+        note: `${d < 0.5 ? d.toFixed(2) : d.toFixed(1)}° apart, ${where}.` });
+    }
+  }
+
+  out.sort((a, b) => a.t - b.t);
+  const seen = {};                                   // Mercury would swamp the list
+  return out.filter(ev => {
+    const k = ev.kind + ':' + ev.body.key + (ev.body2 ? ev.body2.key : '');
+    seen[k] = (seen[k] || 0) + 1;
+    return seen[k] <= 2;
+  }).slice(0, 14);
+}
+
 /* ---------- DOM ---------- */
 const $ = id => document.getElementById(id);
 const rowsEl = $('rows'), detailEl = $('detail'), stampEl = $('stamp'), rateEl = $('rate');
@@ -639,6 +818,7 @@ function select(b) {
   $('hint').textContent = b ? 'Drag to pan · scroll to zoom' : 'Click a body';
   evtCache = { key: null, at: -1e15, val: null };
   needsDraw = true;
+  queueHash();
   if (!b) return;
   detailEl.innerHTML =
     `<h2><span class="dot" style="background:${b.col};width:11px;height:11px"></span>${b.name}</h2>
@@ -739,23 +919,27 @@ const SCRUB_MAX = 10000;
 const tToScrub = t => Math.round((t - T_MIN) / (T_MAX - T_MIN) * SCRUB_MAX);
 const scrubToT = v => T_MIN + v / SCRUB_MAX * (T_MAX - T_MIN);
 let scrubbing = false;
+let hashTimer = null;
+const queueHash = () => { clearTimeout(hashTimer); hashTimer = setTimeout(writeHash, 600); };
 function syncTransport() {
   stampEl.textContent = fmtStamp(state.t);
   if (!scrubbing) scrub.value = tToScrub(state.t);
   rateEl.textContent = state.playing
     ? (state.dir < 0 ? '← ' : '') + RATES[state.rateIdx].lbl
     : 'paused';
+  if (!$('paneEvents').hidden) markNear();
 }
 scrub.addEventListener('pointerdown', () => { scrubbing = true; });
 window.addEventListener('pointerup', () => { scrubbing = false; });
 scrub.addEventListener('input', () => {
-  state.t = clampT(scrubToT(+scrub.value)); needsDraw = true; syncTransport();
+  state.t = clampT(scrubToT(+scrub.value)); needsDraw = true; syncTransport(); queueHash();
 });
 function setPlaying(v) {
   state.playing = v;
   $('play').textContent = v ? 'Pause' : 'Play';
   needsDraw = true;
   syncTransport();
+  queueHash();
 }
 $('play').onclick = () => setPlaying(!state.playing);
 function setRate(delta) {
@@ -772,7 +956,77 @@ function setRate(delta) {
 $('fwd').onclick = () => setRate(1);
 $('back').onclick = () => setRate(-1);
 $('now').onclick = () => { state.t = clampT(Date.now()); setPlaying(false); };
-$('pow').addEventListener('input', e => { state.pow = +e.target.value / 100; needsDraw = true; });
+$('pow').addEventListener('input', e => {
+  state.pow = +e.target.value / 100; needsDraw = true; queueHash();
+});
+
+/* ---------- coming up ---------- */
+let evList = null, evAnchor = null;
+function showTab(which) {
+  const ev = which === 'events';
+  $('tabEvents').classList.toggle('on', ev);
+  $('tabBodies').classList.toggle('on', !ev);
+  $('paneEvents').hidden = !ev;
+  $('paneBodies').hidden = ev;
+  if (ev) buildEvents();
+  computeView(); needsDraw = true;
+}
+$('tabBodies').onclick = () => showTab('bodies');
+$('tabEvents').onclick = () => showTab('events');
+
+function buildEvents(force) {
+  // the scan is ~120ms, so only redo it once the view has drifted out of range
+  if (!force && evList && Math.abs(state.t - evAnchor) < 300 * DAY) { markNear(); return; }
+  $('events').innerHTML = '<div class="ev-wait">Searching five years ahead…</div>';
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    evAnchor = state.t;
+    evList = scanAhead(state.t);
+    const html = evList.map((e, i) => {
+      const pips = [e.body, e.body2].filter(Boolean)
+        .map(b => `<i style="background:${b.col}"></i>`).join('');
+      return `<button class="ev" data-i="${i}">
+        <span class="d">${fmtDate(e.t).toUpperCase()}</span>
+        <span class="t"><span class="pips">${pips}</span>${e.title}</span>
+        <span class="n">${e.note}</span></button>`;
+    }).join('');
+    $('events').innerHTML = html || '<div class="ev-wait">Nothing in the next five years.</div>';
+    for (const el of $('events').querySelectorAll('.ev')) {
+      el.onclick = () => {
+        const e = evList[+el.dataset.i];
+        state.t = clampT(e.t); setPlaying(false); select(e.body); markNear();
+      };
+    }
+    markNear();
+  }));
+}
+// flag whichever event the current date is sitting on
+function markNear() {
+  if (!evList) return;
+  const els = $('events').querySelectorAll('.ev');
+  els.forEach((el, i) => el.classList.toggle('near',
+    Math.abs(evList[i].t - state.t) < 12 * 3600e3));
+}
+
+/* ---------- shareable state ---------- */
+function writeHash() {
+  const p = new URLSearchParams();
+  p.set('t', new Date(state.t).toISOString().slice(0, 16) + 'Z');
+  if (state.sel) p.set('b', state.sel.key);
+  if (Math.abs(state.zoom - 1) > .01) p.set('z', state.zoom.toFixed(2));
+  if (Math.abs(state.pow - .45) > .001) p.set('s', Math.round(state.pow * 100));
+  history.replaceState(null, '', '#' + p.toString());
+}
+function readHash() {
+  if (!location.hash.length) return;
+  const p = new URLSearchParams(location.hash.slice(1));
+  const t = Date.parse(p.get('t') || '');
+  if (isFinite(t)) state.t = clampT(t);
+  const z = parseFloat(p.get('z')); if (isFinite(z)) state.zoom = Math.max(.25, Math.min(140, z));
+  const s = parseInt(p.get('s'), 10);
+  if (isFinite(s) && s >= 25 && s <= 100) { state.pow = s / 100; $('pow').value = s; }
+  const b = BODIES.find(x => x.key === p.get('b'));
+  if (b) select(b);
+}
 
 /* ---------- about ---------- */
 $('btnAbout').onclick = () => $('about').classList.add('show');
@@ -829,6 +1083,7 @@ function zoomAbout(f, cx, cy) {
   state.pan.y += (oy - cy) * (k - 1);
   state.zoom = nz;
   needsDraw = true;
+  queueHash();
 }
 // pinch
 cv.addEventListener('touchmove', e => {
@@ -854,6 +1109,7 @@ window.addEventListener('keydown', e => {
 
 /* ---------- go ---------- */
 resize();
+readHash();
 syncTransport();
 requestAnimationFrame(frame);
 // webfonts land after first paint and change the panel heights slightly
