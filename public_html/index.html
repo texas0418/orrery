@@ -173,16 +173,26 @@ button.t.pri{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,16
 /* ---------- about ---------- */
 #about{position:fixed;inset:0;z-index:60;background:rgba(3,4,8,.86);
   backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-  display:none;overflow-y:auto;padding:56px 20px}
+  display:none;overflow-y:auto;padding:0 20px}
 #about.show{display:block}
-.doc{max-width:620px;margin:0 auto;padding-bottom:60px}
+.doc{max-width:620px;margin:0 auto;padding:56px 0 60px}
 .doc h2{font-family:var(--fd);font-weight:800;font-size:1.5rem;letter-spacing:-.01em;margin-bottom:4px}
-.doc h3{font-family:var(--fd);font-weight:700;font-size:.82rem;letter-spacing:.14em;
+.toc{position:sticky;top:0;z-index:2;display:flex;flex-wrap:wrap;gap:5px;
+  margin:16px -20px 4px;padding:11px 20px;background:rgba(6,7,12,.96);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--bdr)}
+.toc button{font-family:var(--fd);font-size:.6rem;font-weight:600;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ink3);background:rgba(255,255,255,.045);
+  border:1px solid var(--bdr);border-radius:999px;padding:5px 10px;cursor:pointer;transition:.15s}
+.toc button:hover{color:#fff;border-color:var(--bdr2);background:rgba(255,255,255,.1)}
+.toc button.here{color:#fff;background:rgba(79,110,247,.26);border-color:rgba(139,161,255,.45)}
+.doc h3{scroll-margin-top:52px;font-family:var(--fd);font-weight:700;font-size:.82rem;letter-spacing:.14em;
   text-transform:uppercase;color:var(--ink3);margin:26px 0 9px}
 .doc p{font-size:.9rem;line-height:1.68;color:#c8c8d6;margin-bottom:12px}
 .doc li{font-size:.88rem;line-height:1.62;color:#c8c8d6;margin:0 0 7px 18px}
 .doc .rule{height:1px;background:var(--bdr);margin:26px 0}
-#closeAbout{position:fixed;top:18px;right:20px;z-index:61}
+#closeAbout{position:fixed;top:18px;right:20px;z-index:63}
+@media (max-width:760px){.toc{padding-right:92px}}
 
 .seg{display:flex;background:var(--panel);border:1px solid var(--bdr);border-radius:999px;
   padding:2px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
@@ -393,12 +403,13 @@ button.t.on{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,161
   <div class="doc">
     <h2>Orrery</h2>
     <p style="color:var(--ink2)">A mechanical model of the solar system, with no mechanism.</p>
+    <nav class="toc" id="toc"></nav>
 
-    <h3>What you're looking at</h3>
+    <h3 data-toc="Looking at">What you're looking at</h3>
     <p>The positions on screen are not an animation loop or a decorative approximation. Every frame, the page solves Kepler's equation for each planet from the orbital elements JPL publishes for the interval 1800–2050, and draws the answer. Set the date to any moment in that range and the picture is where those worlds genuinely were, or genuinely will be, to within a few arcminutes.</p>
     <p>The camera starts above the plane of Earth's orbit, on its north side, where everything runs counter-clockwise. You can move it. The tick ring around the outside is ecliptic longitude, zero at the vernal equinox, marked every 30° with the sign that shares that stretch of sky.</p>
 
-    <h3>What's honest and what isn't</h3>
+    <h3 data-toc="What's honest">What's honest and what isn't</h3>
     <ul>
       <li><strong>Positions:</strong> real. Elliptical, correctly oriented, correctly phased.</li>
       <li><strong>Orbit shapes:</strong> computed from the same elements as the planets on them, then warped by whatever the <em>Spread</em> slider is set to. Push Spread to 100 and you are looking at the true ellipses, with the Sun at a focus rather than the centre. Select a body and the two ends of its long axis get marked, which is where that stops being a technicality — Mercury's distance from the Sun swings by a third over its 88-day year.</li>
@@ -441,7 +452,7 @@ button.t.on{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,161
       <li>The address bar keeps the date, selection, view and location, so anything you land on is a link you can send to someone.</li>
     </ul>
 
-    <h3>If you want more than this</h3>
+    <h3 data-toc="Elsewhere">If you want more than this</h3>
     <p>This page is small on purpose, and most of these outclass it. If it made you curious about something it can't answer, go here instead — I'd rather point you at the better tool than pretend to be it.</p>
     <ul>
       <li><a href="https://stellarium.org/">Stellarium</a> — the reference planetarium. Free, open source, hundreds of thousands of stars, deep-sky objects, telescope control. There's a browser version at <a href="https://stellarium-web.org/">stellarium-web.org</a> if you don't want to install anything.</li>
@@ -2492,7 +2503,34 @@ function readHash() {
 }
 
 /* ---------- about ---------- */
-$('btnAbout').onclick = () => $('about').classList.add('show');
+// Built from the headings themselves, so it cannot go stale when a section
+// is added or renamed.
+const tocLinks = [];
+(function buildToc() {
+  const doc = document.querySelector('.doc'), nav = $('toc');
+  doc.querySelectorAll('h3').forEach((h, i) => {
+    h.id = 'sec' + i;
+    const b = document.createElement('button');
+    b.textContent = h.dataset.toc || h.textContent;
+    b.onclick = () => {
+      h.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setTimeout(spyToc, 620);          // smooth scroll fires events all the way; settle after
+    };
+    nav.appendChild(b);
+    tocLinks.push({ h, b });
+  });
+})();
+function spyToc() {
+  let cur = 0;
+  tocLinks.forEach((o, i) => { if (o.h.getBoundingClientRect().top < 120) cur = i; });
+  tocLinks.forEach((o, i) => o.b.classList.toggle('here', i === cur));
+}
+$('about').addEventListener('scroll', spyToc, { passive: true });
+$('btnAbout').onclick = () => {
+  $('about').classList.add('show');
+  $('about').scrollTop = 0;
+  spyToc();
+};
 $('closeAbout').onclick = () => $('about').classList.remove('show');
 
 /* ---------- pointer ---------- */
