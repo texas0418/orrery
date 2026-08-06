@@ -310,6 +310,15 @@ button.t.on{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,161
       <input type="range" id="fov" min="20" max="150" value="105" step="1" aria-label="Field of view">
     </div>
   </div>
+  <div class="ctrls" id="orrCtrls">
+    <span class="lbl">View</span>
+    <button class="t vw" data-el="90">Top</button>
+    <button class="t vw on" data-el="58">Tilt</button>
+    <button class="t vw" data-el="3">Edge on</button>
+    <span class="spacer"></span>
+    <button class="t" id="flySel">Fly to selection</button>
+    <button class="t" id="camReset">Reset</button>
+  </div>
   <div class="ctrls" id="skyCtrls" hidden>
     <span class="lbl">Look</span>
     <button class="t az" data-az="0">N</button>
@@ -349,7 +358,7 @@ button.t.on{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,161
 
     <h3>What you're looking at</h3>
     <p>The positions on screen are not an animation loop or a decorative approximation. Every frame, the page solves Kepler's equation for each planet from the orbital elements JPL publishes for the interval 1800–2050, and draws the answer. Set the date to any moment in that range and the picture is where those worlds genuinely were, or genuinely will be, to within a few arcminutes.</p>
-    <p>You're looking down on the plane of Earth's orbit from its north side, so everything runs counter-clockwise. The tick ring around the outside is ecliptic longitude, zero at the vernal equinox, marked every 30° with the sign that shares that stretch of sky.</p>
+    <p>The camera starts above the plane of Earth's orbit, on its north side, where everything runs counter-clockwise. You can move it. The tick ring around the outside is ecliptic longitude, zero at the vernal equinox, marked every 30° with the sign that shares that stretch of sky.</p>
 
     <h3>What's honest and what isn't</h3>
     <ul>
@@ -357,7 +366,8 @@ button.t.on{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,161
       <li><strong>Orbit shapes:</strong> computed from the same elements as the planets on them, then warped by whatever the <em>Spread</em> slider is set to. Push Spread to 100 and you are looking at the true ellipses, with the Sun at a focus rather than the centre. Select a body and the two ends of its long axis get marked, which is where that stops being a technicality — Mercury's distance from the Sun swings by a third over its 88-day year.</li>
       <li><strong>Distances:</strong> compressed by default. The <em>Spread</em> slider is an exponent: at 100 the layout is linearly true to scale, at which point Mercury sits a pixel from the Sun and is effectively invisible. At the default 45 you can see the whole system at once. The numbers in the panels are always the true ones.</li>
       <li><strong>Body sizes:</strong> not to scale, and could never be. At this zoom Earth would be far smaller than one pixel.</li>
-      <li><strong>Flattened:</strong> orbits are tilted a few degrees out of the ecliptic; this view projects that away. Pluto's 17° tilt is the one you'd really notice.</li>
+      <li><strong>Inclination:</strong> real, and now visible. The orrery is drawn with a camera in three dimensions, so the few degrees each orbit is tilted out of the plane of Earth's orbit are on screen rather than projected away. Press <em>Edge on</em> and select Pluto: 17° of tilt, swinging clear of the thin sheet everything else keeps to. Each planet drops a dotted line to that plane so you can read its height off directly.</li>
+      <li><strong>Compression does not distort direction.</strong> <em>Spread</em> scales how far a body sits from the Sun but never which way, so the inclination and the ecliptic longitude on screen are exact at every setting. Only distance is negotiable.</li>
     </ul>
 
     <h3>Events</h3>
@@ -376,7 +386,8 @@ button.t.on{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,161
 
     <h3>Controls</h3>
     <ul>
-      <li>Drag to pan, scroll or pinch to zoom, click a body to select it. Selecting one also marks the ends of its long axis — perihelion and aphelion — which is where the off-centre Sun stops being an abstraction.</li>
+      <li>In the <em>Orrery</em>, drag to swing the camera around the system, scroll or pinch to move in and out, shift-drag to slide the whole view. <em>Top</em>, <em>Tilt</em> and <em>Edge on</em> are the three angles worth having; <em>Fly to selection</em> takes the camera to whatever is selected.</li>
+      <li>Click a body to select it. That also marks the ends of its long axis — perihelion and aphelion — which is where the off-centre Sun stops being an abstraction.</li>
       <li><strong>Space</strong> play/pause · <strong>←/→</strong> step a day · <strong>N</strong> return to now · <strong>Esc</strong> deselect</li>
       <li>The playback buttons step through speeds from an hour per second up to a decade per second, in both directions.</li>
       <li>In <em>Sky</em>, drag to look around, scroll to change the field of view, and click a body to walk the view over to it.</li>
@@ -714,15 +725,50 @@ function makeStars() {
 }
 window.addEventListener('resize', resize);
 
-/* ---------- projection ---------- */
-// screen radius = (AU ^ pow) * unit * zoom  — pow 1 is linearly true to scale
-function baseUnit() { return VIEW.fit / Math.pow(36, state.pow); }
-function project(x, y) {
-  const r = Math.hypot(x, y);
-  const k = r === 0 ? 0 : Math.pow(r, state.pow) / r * baseUnit() * state.zoom;
-  return [VIEW.cx + state.pan.x + x * k, VIEW.cy + state.pan.y - y * k];
+/* ============================================================================
+   The orrery is drawn in three dimensions. Radial compression scales a body's
+   distance from the Sun but never its direction, so every inclination on
+   screen is the true one at any Spread setting.
+   ========================================================================== */
+const CAM = { az: -62, el: 58, zoom: 1, tx: 0, ty: 0, tz: 0, fly: null };
+const HALF_FOV = 24 * D2R;
+
+const sceneR = au => Math.pow(au, state.pow);
+const SCENE_MAX = () => sceneR(33);
+// world (AU, 3D) -> scene: same direction, compressed radius
+function toScene(x, y, z) {
+  const r = Math.hypot(x, y, z);
+  if (r === 0) return [0, 0, 0];
+  const k = sceneR(r) / r;
+  return [x * k, y * k, z * k];
 }
-const projR = au => Math.pow(au, state.pow) * baseUnit() * state.zoom;
+const cross = (a, b) => [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
+const dot3 = (a, b) => a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+const nrm = v => { const m = Math.hypot(...v) || 1; return [v[0]/m, v[1]/m, v[2]/m]; };
+
+const CV = { eye: [0,0,0], fwd: [0,0,1], right: [1,0,0], up: [0,1,0], f: 800, dist: 1 };
+function setupCam() {
+  const az = CAM.az * D2R, el = Math.max(-89.5, Math.min(89.5, CAM.el)) * D2R;
+  CV.f = VIEW.fit / Math.tan(HALF_FOV);
+  CV.dist = SCENE_MAX() / Math.tan(HALF_FOV) / CAM.zoom;
+  const off = [Math.cos(el)*Math.cos(az), Math.cos(el)*Math.sin(az), Math.sin(el)];
+  CV.eye = [CAM.tx + off[0]*CV.dist, CAM.ty + off[1]*CV.dist, CAM.tz + off[2]*CV.dist];
+  CV.fwd = [-off[0], -off[1], -off[2]];
+  CV.right = nrm(cross(CV.fwd, [0, 0, 1]));
+  CV.up = cross(CV.right, CV.fwd);
+}
+// scene point -> [screenX, screenY, depth] or null when behind the camera
+function proj(p) {
+  const d = [p[0]-CV.eye[0], p[1]-CV.eye[1], p[2]-CV.eye[2]];
+  const z = dot3(d, CV.fwd);
+  if (z <= CV.dist * 0.012) return null;
+  const k = CV.f / z;
+  return [VIEW.cx + state.pan.x + dot3(d, CV.right) * k,
+          VIEW.cy + state.pan.y - dot3(d, CV.up) * k, z];
+}
+const projAU = (x, y, z) => proj(toScene(x, y, z));
+// pixels per scene unit at the target plane — used for sizing rings and grids
+const pxAt = z => CV.f / z;
 
 /* ---------- drawing ---------- */
 function drawStars() {
@@ -733,123 +779,186 @@ function drawStars() {
   }
   ctx.globalAlpha = 1;
 }
+// A faint lattice on the plane of Earth's orbit. Without it there is no depth
+// cue at all and the whole thing reads as a flat diagram again.
+function drawEclipticGrid() {
+  const RINGS = [0.4, 1, 2, 5, 10, 20, 30];
+  ctx.lineWidth = 1;
+  for (const au of RINGS) {
+    const R = sceneR(au);
+    ctx.beginPath();
+    let pen = false;
+    for (let a = 0; a <= 360; a += 4) {
+      const t = a * D2R;
+      const s = proj([Math.cos(t)*R, Math.sin(t)*R, 0]);
+      if (!s) { pen = false; continue; }
+      pen ? ctx.lineTo(s[0], s[1]) : ctx.moveTo(s[0], s[1]);
+      pen = true;
+    }
+    ctx.strokeStyle = 'rgba(255,255,255,.065)';
+    ctx.stroke();
+  }
+  for (let a = 0; a < 360; a += 30) {
+    const t = a * D2R, R = SCENE_MAX();
+    const s0 = proj([0, 0, 0]), s1 = proj([Math.cos(t)*R, Math.sin(t)*R, 0]);
+    if (!s0 || !s1) continue;
+    ctx.strokeStyle = 'rgba(255,255,255,.045)';
+    ctx.beginPath(); ctx.moveTo(s0[0], s0[1]); ctx.lineTo(s1[0], s1[1]); ctx.stroke();
+  }
+}
 function drawZodiac() {
-  const R = projR(33);
-  if (R < 60 || R > Math.max(W, H) * 3) return;
-  const cx = VIEW.cx + state.pan.x, cy = VIEW.cy + state.pan.y;
+  const R = SCENE_MAX();
   ctx.save();
-  ctx.strokeStyle = 'rgba(255,255,255,.055)';
+  ctx.strokeStyle = 'rgba(255,255,255,.05)';
   ctx.lineWidth = 1; ctx.setLineDash([2, 6]);
-  ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.stroke();
-  ctx.setLineDash([]);
+  ctx.beginPath();
+  let pen = false;
+  for (let a = 0; a <= 360; a += 3) {
+    const t = a * D2R;
+    const s = proj([Math.cos(t)*R, Math.sin(t)*R, 0]);
+    if (!s) { pen = false; continue; }
+    pen ? ctx.lineTo(s[0], s[1]) : ctx.moveTo(s[0], s[1]);
+    pen = true;
+  }
+  ctx.stroke(); ctx.setLineDash([]);
+  ctx.font = '13px "DM Sans", system-ui, sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   for (let d = 0; d < 360; d += 30) {
-    const a = d * D2R;
-    const x1 = cx + Math.cos(a) * R, y1 = cy - Math.sin(a) * R;
-    const x2 = cx + Math.cos(a) * (R + 7), y2 = cy - Math.sin(a) * (R + 7);
-    ctx.strokeStyle = d === 0 ? 'rgba(139,161,255,.5)' : 'rgba(255,255,255,.14)';
-    ctx.lineWidth = d === 0 ? 1.4 : 1;
-    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
-    const am = (d + 15) * D2R;
-    ctx.fillStyle = 'rgba(255,255,255,.26)';
-    ctx.font = '13px "DM Sans", system-ui, sans-serif';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(SIGNS[d / 30][0], cx + Math.cos(am) * (R + 17), cy - Math.sin(am) * (R + 17));
+    const t = d * D2R;
+    const a = proj([Math.cos(t)*R, Math.sin(t)*R, 0]);
+    const b = proj([Math.cos(t)*R*1.035, Math.sin(t)*R*1.035, 0]);
+    if (a && b) {
+      ctx.strokeStyle = d === 0 ? 'rgba(139,161,255,.45)' : 'rgba(255,255,255,.12)';
+      ctx.lineWidth = d === 0 ? 1.4 : 1;
+      ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+    }
+    const m = (d + 15) * D2R;
+    const g = proj([Math.cos(m)*R*1.08, Math.sin(m)*R*1.08, 0]);
+    if (g) {
+      ctx.fillStyle = 'rgba(255,255,255,.22)';
+      ctx.fillText(SIGNS[d / 30][0], g[0], g[1]);
+    }
   }
   ctx.restore();
 }
-function drawOrbit(b, T, active) {
+function orbitPoints(b, T) {
   const el = elementsAt(b, T);
   const argPeri = (el.w - el.O) * D2R, node = el.O * D2R;
   const bsq = el.a * Math.sqrt(1 - el.e * el.e);
-  ctx.beginPath();
-  const N = 220;
+  const out = [];
+  const N = 240;
   for (let i = 0; i <= N; i++) {
     const E = i / N * TAU;
     const p = toEcliptic(el.a * (Math.cos(E) - el.e), bsq * Math.sin(E), argPeri, el.I, node);
-    const [sx, sy] = project(p.x, p.y);
-    i ? ctx.lineTo(sx, sy) : ctx.moveTo(sx, sy);
+    out.push(proj(toScene(p.x, p.y, p.z)));
   }
-  ctx.closePath();
-  ctx.lineWidth = active ? 1.5 : 1;
-  ctx.strokeStyle = active ? hexA(b.col, .85) : hexA(b.col, b.dwarf ? .16 : .26);
-  if (b.dwarf) ctx.setLineDash([3, 5]);
-  ctx.stroke();
-  ctx.setLineDash([]);
-  if (active) {              // the two ends of the long axis, where the Sun isn't centred
+  return { pts: out, el, argPeri, node };
+}
+function drawOrbit(b, T, active) {
+  const { pts, el, argPeri, node } = orbitPoints(b, T);
+  // fade the far half so the ellipse reads as a ring in space, not a flat oval
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i-1], c = pts[i];
+    if (!a || !c) continue;
+    const near = Math.max(0, Math.min(1, 1 - (c[2] - CV.dist * .5) / (CV.dist * 1.6)));
+    const base = active ? .95 : (b.dwarf ? .22 : .34);
+    ctx.strokeStyle = hexA(b.col, base * (.30 + .70 * near));
+    ctx.lineWidth = active ? 1.5 : 1;
+    if (b.dwarf) ctx.setLineDash([3, 5]);
+    ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(c[0], c[1]); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  if (active) {
     apsis(toEcliptic(el.a * (1 - el.e), 0, argPeri, el.I, node), 'PERIHELION', b.col);
     apsis(toEcliptic(-el.a * (1 + el.e), 0, argPeri, el.I, node), 'APHELION', b.col);
   }
 }
 function apsis(p, label, col) {
-  const [x, y] = project(p.x, p.y);
-  const [cx, cy] = project(0, 0);
-  const a = Math.atan2(y - cy, x - cx);
+  const s = projAU(p.x, p.y, p.z);
+  const c = proj([0, 0, 0]);
+  if (!s || !c) return;
+  const a = Math.atan2(s[1] - c[1], s[0] - c[0]);
   const dx = Math.cos(a) * 5, dy = Math.sin(a) * 5;
   ctx.strokeStyle = hexA(col, .7); ctx.lineWidth = 1.4;
-  ctx.beginPath(); ctx.moveTo(x - dx, y - dy); ctx.lineTo(x + dx, y + dy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(s[0]-dx, s[1]-dy); ctx.lineTo(s[0]+dx, s[1]+dy); ctx.stroke();
   ctx.font = '600 8px Outfit, system-ui, sans-serif';
   ctx.textAlign = Math.cos(a) < 0 ? 'right' : 'left';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = hexA(col, .55);
-  ctx.fillText(label, x + dx * 2, y + dy * 2);
+  ctx.fillText(label, s[0] + dx*2, s[1] + dy*2);
 }
 function hexA(hex, a) {
   const n = parseInt(hex.slice(1), 16);
   return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`;
 }
 function drawSun() {
-  const [x, y] = project(0, 0);
-  const g = ctx.createRadialGradient(x, y, 0, x, y, 54);
+  const s = proj([0, 0, 0]);
+  if (!s) return;
+  const R = Math.max(22, Math.min(120, pxAt(s[2]) * SCENE_MAX() * .16));
+  const g = ctx.createRadialGradient(s[0], s[1], 0, s[0], s[1], R);
   g.addColorStop(0, 'rgba(255,236,190,.62)');
   g.addColorStop(.28, 'rgba(255,192,96,.20)');
   g.addColorStop(1, 'rgba(255,170,60,0)');
   ctx.fillStyle = g;
-  ctx.beginPath(); ctx.arc(x, y, 54, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.arc(s[0], s[1], R, 0, TAU); ctx.fill();
   ctx.fillStyle = '#ffe6b0';
-  ctx.beginPath(); ctx.arc(x, y, 8, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.arc(s[0], s[1], Math.max(4, R * .16), 0, TAU); ctx.fill();
 }
-function drawBody(b, p, isSel, isHov) {
-  const [x, y] = project(p.x, p.y);
-  const r = b.r;
+// the line every planet drops to the plane of Earth's orbit — this is what
+// makes an inclination legible rather than merely present
+function drawDrop(b, p, s) {
+  if (Math.abs(p.z) < 1e-6) return;
+  const foot = projAU(p.x, p.y, 0);
+  if (!foot || !s) return;
+  ctx.strokeStyle = hexA(b.col, .42);
+  ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
+  ctx.beginPath(); ctx.moveTo(s[0], s[1]); ctx.lineTo(foot[0], foot[1]); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = hexA(b.col, .35);
+  ctx.beginPath(); ctx.arc(foot[0], foot[1], 1.4, 0, TAU); ctx.fill();
+}
+function drawBody(b, p, s, isSel, isHov) {
+  const scale = Math.max(.65, Math.min(2.4, Math.sqrt(CV.dist / s[2])));
+  const r = b.r * scale;
   if (isSel || isHov) {
     ctx.strokeStyle = hexA(b.col, isSel ? .8 : .45);
     ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.arc(x, y, r + 8, 0, TAU); ctx.stroke();
+    ctx.beginPath(); ctx.arc(s[0], s[1], r + 8, 0, TAU); ctx.stroke();
   }
-  const g = ctx.createRadialGradient(x, y, 0, x, y, r * 4.2);
+  const g = ctx.createRadialGradient(s[0], s[1], 0, s[0], s[1], r * 4.2);
   g.addColorStop(0, hexA(b.col, .5)); g.addColorStop(1, hexA(b.col, 0));
   ctx.fillStyle = g;
-  ctx.beginPath(); ctx.arc(x, y, r * 4.2, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.arc(s[0], s[1], r * 4.2, 0, TAU); ctx.fill();
   if (b.ring) {
-    ctx.save(); ctx.translate(x, y); ctx.scale(1, .34);
+    ctx.save(); ctx.translate(s[0], s[1]);
+    ctx.scale(1, Math.max(.12, Math.abs(Math.sin(CAM.el * D2R))));
     ctx.strokeStyle = hexA(b.col, .62); ctx.lineWidth = 1.6;
     ctx.beginPath(); ctx.arc(0, 0, r * 1.95, 0, TAU); ctx.stroke();
     ctx.restore();
   }
   ctx.fillStyle = b.col;
-  ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.arc(s[0], s[1], r, 0, TAU); ctx.fill();
   if (b.home) {
     ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.arc(x, y, r + 3.2, 0, TAU); ctx.stroke();
+    ctx.beginPath(); ctx.arc(s[0], s[1], r + 3.2, 0, TAU); ctx.stroke();
   }
-  return [x, y];
+  return r;
 }
-// Labels go in a second pass so they sit above every disc, and so crowded inner
-// planets can shuffle out of each other's way instead of overprinting.
 function drawLabels(placed) {
   ctx.font = '600 10px Outfit, system-ui, sans-serif';
   ctx.textBaseline = 'middle';
   const boxes = [];
   const fits = (x, y, w) => x > 6 && x + w < W - 6 &&
     !boxes.some(o => x < o.x + o.w + 4 && x + w + 4 > o.x && y < o.y + 11 && y + 11 > o.y);
-  for (const { b, x, y } of placed) {
+  for (const { b, x, y, r } of placed) {
     const txt = b.name.toUpperCase(), w = ctx.measureText(txt).width;
-    const gap = b.r + 8;
+    const gap = (r || b.r) + 8;
     let px = x > W - gap - w - 6 ? x - gap - w : x + gap, py = y, align = 'left';
-    const opts = [[x + gap, y, 'left'], [x - gap - w, y, 'left'],
-                  [x + gap, y - 13, 'left'], [x + gap, y + 13, 'left'],
-                  [x - gap - w, y - 13, 'left'], [x - gap - w, y + 13, 'left']];
-    for (const o of opts) if (fits(o[0], o[1] - 5.5, w)) { px = o[0]; py = o[1]; align = o[2]; break; }
+    const opts = [[x + gap, y], [x - gap - w, y], [x + gap, y - 13], [x + gap, y + 13],
+                  [x - gap - w, y - 13], [x - gap - w, y + 13],
+                  [x + gap, y - 26], [x + gap, y + 26], [x - gap - w, y - 26], [x - gap - w, y + 26],
+                  [x - w / 2, y - 20], [x - w / 2, y + 20]];
+    for (const o of opts) if (fits(o[0], o[1] - 5.5, w)) { px = o[0]; py = o[1]; break; }
     boxes.push({ x: px, y: py - 5.5, w });
     ctx.textAlign = align;
     ctx.fillStyle = state.sel === b ? '#fff'
@@ -857,6 +966,33 @@ function drawLabels(placed) {
     ctx.fillText(txt, px, py);
   }
 }
+
+/* ---------- camera moves ---------- */
+function flyTo(b, ms = 900) {
+  const T = century(state.t);
+  let to = [0, 0, 0], zTo = 1;
+  if (b) {
+    const p = positionAt(b, T);
+    to = toScene(p.x, p.y, p.z);
+    const R = Math.max(sceneR(0.45), Math.hypot(...to));
+    zTo = Math.max(1, Math.min(14, SCENE_MAX() / (R * 1.15)));
+  }
+  CAM.fly = { t0: performance.now(), ms, from: [CAM.tx, CAM.ty, CAM.tz], to,
+              zFrom: CAM.zoom, zTo };
+  needsDraw = true;
+}
+function stepFly(now) {
+  const f = CAM.fly; if (!f) return;
+  const u = Math.min(1, (now - f.t0) / f.ms);
+  const e = u < .5 ? 4*u*u*u : 1 - Math.pow(-2*u + 2, 3) / 2;   // ease in-out cubic
+  CAM.tx = f.from[0] + (f.to[0] - f.from[0]) * e;
+  CAM.ty = f.from[1] + (f.to[1] - f.from[1]) * e;
+  CAM.tz = f.from[2] + (f.to[2] - f.from[2]) * e;
+  CAM.zoom = f.zFrom + (f.zTo - f.zFrom) * e;
+  if (u >= 1) CAM.fly = null;
+  needsDraw = true;
+}
+
 
 /* ---------- where the observer is standing ---------- */
 // Enough IANA zones to land most people within a degree or two, with no
@@ -1427,7 +1563,10 @@ for (const b of BODIES) {
   el.className = 'row';
   el.innerHTML = `<span class="dot" style="background:${b.col}"></span>
     <span class="nm">${b.name}</span><span class="au">—</span>`;
-  el.onclick = () => select(state.sel === b ? null : b);
+  el.onclick = () => {
+    if (state.sel === b) { select(null); return; }
+    select(b); flyTo(b);
+  };
   el.onmouseenter = () => { state.hover = b; needsDraw = true; };
   el.onmouseleave = () => { if (state.hover === b) { state.hover = null; needsDraw = true; } };
   rowsEl.appendChild(el);
@@ -1579,6 +1718,7 @@ function frame(now) {
     syncTransport();
     needsDraw = true;
   }
+  if (CAM.fly) stepFly(now);
   if (!needsDraw) { requestAnimationFrame(frame); return; }
   needsDraw = false;
   ctx.clearRect(0, 0, W, H);
@@ -1589,28 +1729,44 @@ function frame(now) {
     requestAnimationFrame(frame);
     return;
   }
+  setupCam();
   drawStars();
+  drawEclipticGrid();
   drawZodiac();
   const T = century(state.t);
   for (const b of BODIES) drawOrbit(b, T, state.sel === b || state.hover === b);
-  drawSun();
+
+  const items = [];
+  const sunS = proj([0, 0, 0]);
+  if (sunS) items.push({ sun: true, z: sunS[2] });
   hits.length = 0;
-  const earthP = positionAt(EARTH, T);
-  if (state.sel && !state.sel.home) {           // sight line Earth → selected body
-    const sp = positionAt(state.sel, T);
-    const [ax, ay] = project(earthP.x, earthP.y), [bx, by] = project(sp.x, sp.y);
-    ctx.strokeStyle = 'rgba(255,255,255,.16)'; ctx.lineWidth = 1;
-    ctx.setLineDash([2, 4]);
-    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
-    ctx.setLineDash([]);
-  }
   for (const b of BODIES) {
     const p = positionAt(b, T);
-    const [x, y] = drawBody(b, p, state.sel === b, state.hover === b);
-    hits.push({ b, x, y });
     rowMap[b.key].au.textContent = Math.hypot(p.x, p.y, p.z).toFixed(2);
+    const s = projAU(p.x, p.y, p.z);
+    if (s) items.push({ b, p, s, z: s[2] });
   }
-  drawLabels([...hits].sort((m, n) =>
+  items.sort((m, n) => n.z - m.z);              // painter's order, far first
+
+  if (state.sel && !state.sel.home && !state.sel.sky) {   // sight line Earth → body
+    const e = positionAt(EARTH, T), q = positionAt(state.sel, T);
+    const a = projAU(e.x, e.y, e.z), c = projAU(q.x, q.y, q.z);
+    if (a && c) {
+      ctx.strokeStyle = 'rgba(255,255,255,.16)'; ctx.lineWidth = 1;
+      ctx.setLineDash([2, 4]);
+      ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(c[0], c[1]); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  }
+  const labels = [];
+  for (const it of items) {
+    if (it.sun) { drawSun(); continue; }
+    drawDrop(it.b, it.p, it.s);
+    const r = drawBody(it.b, it.p, it.s, state.sel === it.b, state.hover === it.b);
+    hits.push({ b: it.b, x: it.s[0], y: it.s[1] });
+    labels.push({ b: it.b, x: it.s[0], y: it.s[1], r });
+  }
+  drawLabels(labels.sort((m, n) =>
     (n.b === state.sel) - (m.b === state.sel) || n.b.r - m.b.r));
   if (state.sel) updateDetail();
   requestAnimationFrame(frame);
@@ -1768,6 +1924,7 @@ function setMode(m) {
   $('mOrrery').classList.toggle('on', !sky);
   $('tabBodies').textContent = sky ? 'Tonight' : 'Bodies';
   $('skyCtrls').hidden = !sky;
+  $('orrCtrls').hidden = sky;
   $('spreadWrap').hidden = sky;
   $('fieldWrap').hidden = !sky;
   document.body.classList.toggle('sky', sky);
@@ -1777,6 +1934,19 @@ function setMode(m) {
   showTab(state.tab);
   computeView(); needsDraw = true; queueHash();
 }
+for (const el of document.querySelectorAll('.vw')) el.onclick = () => {
+  CAM.fly = null; CAM.el = +el.dataset.el;
+  for (const o of document.querySelectorAll('.vw')) o.classList.toggle('on', o === el);
+  needsDraw = true; queueHash();
+};
+$('flySel').onclick = () => flyTo(state.sel && !state.sel.sky ? state.sel : null);
+$('camReset').onclick = () => {
+  CAM.az = -62; CAM.el = 58; CAM.fly = null;
+  state.pan.x = state.pan.y = 0;
+  flyTo(null, 600);
+  for (const o of document.querySelectorAll('.vw')) o.classList.toggle('on', o.dataset.el === '58');
+  queueHash();
+};
 $('mOrrery').onclick = () => setMode('orrery');
 $('mSky').onclick = () => setMode('sky');
 for (const el of document.querySelectorAll('.az'))
@@ -1829,7 +1999,7 @@ function writeHash() {
     p.set('o', `${state.loc.lat.toFixed(2)},${state.loc.lon.toFixed(2)}`);
     if (state.track !== 3) p.set('k', state.track);
   } else {
-    if (Math.abs(state.zoom - 1) > .01) p.set('z', state.zoom.toFixed(2));
+    p.set('c', `${CAM.az.toFixed(0)},${CAM.el.toFixed(0)},${CAM.zoom.toFixed(2)}`);
     if (Math.abs(state.pow - .45) > .001) p.set('s', Math.round(state.pow * 100));
   }
   history.replaceState(null, '', '#' + p.toString());
@@ -1839,7 +2009,13 @@ function readHash() {
   const p = new URLSearchParams(location.hash.slice(1));
   const t = Date.parse(p.get('t') || '');
   if (isFinite(t)) state.t = clampT(t);
-  const z = parseFloat(p.get('z')); if (isFinite(z)) state.zoom = Math.max(.25, Math.min(140, z));
+  const c = (p.get('c') || '').split(',').map(parseFloat);
+  if (c.length === 3 && c.every(isFinite)) {
+    CAM.az = c[0]; CAM.el = Math.max(-89, Math.min(89, c[1]));
+    CAM.zoom = Math.max(.35, Math.min(60, c[2]));
+    for (const el of document.querySelectorAll('.vw'))
+      el.classList.toggle('on', Math.abs(+el.dataset.el - CAM.el) < 0.5);
+  }
   const s = parseInt(p.get('s'), 10);
   if (isFinite(s) && s >= 25 && s <= 100) { state.pow = s / 100; $('pow').value = s; }
   const o = (p.get('o') || '').split(',').map(parseFloat);
@@ -1881,8 +2057,12 @@ cv.addEventListener('pointermove', e => {
       const k = (state.view.fov / 2) / Math.max(60, SKY.R);
       state.view.az = ((state.view.az - dx * k) % 360 + 360) % 360;
       state.view.alt = Math.max(-25, Math.min(88, state.view.alt + dy * k));
-    } else {
+    } else if (e.shiftKey || e.button === 2) {
       state.pan.x += dx; state.pan.y += dy;
+    } else {
+      CAM.fly = null;
+      CAM.az = ((CAM.az - dx * .32) % 360 + 360) % 360;
+      CAM.el = Math.max(-89, Math.min(89, CAM.el + dy * .32));
     }
     drag = { x: e.clientX, y: e.clientY };
     needsDraw = true;
@@ -1918,19 +2098,11 @@ cv.addEventListener('wheel', e => {
     $('fov').value = Math.round(state.view.fov);
     needsDraw = true; queueHash();
   } else {
-    zoomAbout(Math.exp(-e.deltaY * .0016), e.clientX, e.clientY);
+    CAM.fly = null;
+    CAM.zoom = Math.max(.35, Math.min(60, CAM.zoom * Math.exp(-e.deltaY * .0016)));
+    needsDraw = true; queueHash();
   }
 }, { passive: false });
-function zoomAbout(f, cx, cy) {
-  const nz = Math.max(.25, Math.min(140, state.zoom * f));
-  const k = nz / state.zoom;
-  const ox = VIEW.cx + state.pan.x, oy = VIEW.cy + state.pan.y;
-  state.pan.x += (ox - cx) * (k - 1);
-  state.pan.y += (oy - cy) * (k - 1);
-  state.zoom = nz;
-  needsDraw = true;
-  queueHash();
-}
 // pinch
 cv.addEventListener('touchmove', e => {
   if (e.touches.length !== 2) return;
@@ -1943,7 +2115,11 @@ cv.addEventListener('touchmove', e => {
       state.view.fov = Math.max(12, Math.min(150, state.view.fov * (pinch / d)));
       $('fov').value = Math.round(state.view.fov);
       needsDraw = true;
-    } else zoomAbout(d / pinch, mx, my);
+    } else {
+      CAM.fly = null;
+      CAM.zoom = Math.max(.35, Math.min(60, CAM.zoom * (d / pinch)));
+      needsDraw = true;
+    }
   }
   pinch = d; drag = null;
 }, { passive: false });

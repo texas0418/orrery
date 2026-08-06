@@ -10,8 +10,17 @@ One HTML file, no frameworks, no build step, no server, no analytics.
 Real planetary positions from the JPL low-precision Keplerian element table
 (Standish, *Approximate Positions of the Major Planets*, 1800–2050). Kepler's
 equation solved per body per frame. Perihelion and aphelion marked on the
-selected orbit. Distances radially compressed by the *Spread* exponent — true
-ellipses, and true on-screen angles, only at Spread 100.
+selected orbit.
+
+Drawn with a perspective camera in three dimensions — orbit it, dolly in,
+fly to a body, or drop to *Edge on* to see the real orbital inclinations
+against the plane of Earth's orbit. Each planet drops a line to that plane so
+its height is readable. Pluto's 17° is the one worth looking at.
+
+Distances are radially compressed by the *Spread* exponent, which scales how
+far a body sits from the Sun but never which way — so ecliptic latitude and
+longitude on screen are exact at every setting (verified to 1e-9). Orbit
+*shapes*, and on-screen angles as seen from Earth, are true only at Spread 100.
 
 ## Sky view
 
