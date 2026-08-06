@@ -38,7 +38,8 @@ SOFTWARE.
 
 public_html/index.html and skydata.js contain three packed strings —
 STAR_BLOB, STAR_NAMES and CON_BLOB — that are not covered by the MIT grant
-above. They are derived from other people's work and keep their licences.
+above. They are derived from other people's work and keep their licences. The same
+goes for every image in public_html/tex/.
 
 STAR_BLOB, STAR_NAMES
   An extract of the HYG database v3.8 (1,637 stars to magnitude 5: right
@@ -51,6 +52,14 @@ STAR_BLOB, STAR_NAMES
   not, you must attribute the HYG database and license the extract under
   CC BY-SA 4.0 or a compatible licence. You may not add restrictions to it.
   build-skydata.js regenerates it from the upstream CSV.
+
+public_html/tex/*.jpg
+  Planetary and lunar surface maps from Solar System Scope --
+  https://www.solarsystemscope.com/textures/ -- downscaled to 1024x512 and
+  recompressed. Built from Messenger, Viking, Cassini and Hubble imagery.
+
+  Licensed CC BY 4.0. https://creativecommons.org/licenses/by/4.0/
+  Attribution required; credit is given in the page's About panel.
 
 CON_BLOB
   Constellation figures from d3-celestial, Copyright (c) 2015 Olaf Frohn —
@@ -83,7 +92,9 @@ CON_BLOB
 ────────────────────────────────────────────────────────────────────────
 
 The planetary elements are from "Approximate Positions of the Major
-Planets" by E. M. Standish, JPL Solar System Dynamics — a published table
+Planets" by E. M. Standish, JPL Solar System Dynamics; the rotational
+elements are from the IAU Working Group on Cartographic Coordinates and
+Rotational Elements 2015 report — a published table
 of physical constants, reproduced as fact. The lunar series is Paul
 Schlyter's abridged theory, likewise. Neither claims a licence over the
 numbers, and none is asserted here.

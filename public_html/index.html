@@ -2,8 +2,8 @@
 <!--
   Orrery — https://orrery.simonbuilds.app  ·  https://github.com/texas0418/orrery
 
-  Code: MIT. But this file also embeds two datasets that are NOT MIT, and
-  copying the file wholesale carries their obligations with it:
+  Code: MIT. But this file embeds two datasets that are NOT MIT, and loads
+  surface maps that are not either. Copying it carries their obligations:
 
     STAR_BLOB / STAR_NAMES  extract of the HYG database v3.8 (astronexus),
                             CC BY-SA 4.0 — share-alike, so this extract must
@@ -11,7 +11,11 @@
     CON_BLOB                d3-celestial constellation figures,
                             (c) 2015 Olaf Frohn, BSD 3-Clause — retain notice.
 
-  Planetary elements: E. M. Standish, JPL. Lunar series: Paul Schlyter.
+    tex/*.jpg               planetary surface maps from Solar System Scope,
+                            CC BY 4.0 — attribution required.
+
+  Planetary elements: E. M. Standish, JPL. Rotational elements: IAU WGCCRE
+  2015. Lunar series: Paul Schlyter.
   Full terms in LICENSE in the repository.
 -->
 <html lang="en">
@@ -330,7 +334,7 @@ button.t.on{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,161
     </div>
     <div class="slid" id="fieldWrap" hidden>
       <span class="lbl">Field</span>
-      <input type="range" id="fov" min="20" max="150" value="105" step="1" aria-label="Field of view">
+      <input type="range" id="fov" min="3" max="150" value="105" step="1" aria-label="Field of view">
     </div>
   </div>
   <div class="ctrls" id="orrCtrls">
@@ -339,7 +343,8 @@ button.t.on{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,161
     <button class="t vw on" data-el="58">Tilt</button>
     <button class="t vw" data-el="3">Edge on</button>
     <span class="spacer"></span>
-    <button class="t" id="flySel">Fly to selection</button>
+    <button class="t" id="flySel">Fly to</button>
+    <button class="t" id="approachBtn">Approach</button>
     <button class="t" id="camReset">Reset</button>
   </div>
   <div class="ctrls" id="skyCtrls" hidden>
@@ -418,6 +423,14 @@ button.t.on{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,161
     <p>This is the thing I built the mode for. Select a planet, leave the trail on, and you get its own position plotted for every few days over the months either side — held against the stars, because that's the frame it's moving through.</p>
     <p>Mars will draw you a loop. For most of the time it slides east against the stars; then for a couple of months it stops, reverses, backs westward, stops again and resumes. Nothing about Mars changes. Earth, on a shorter, faster orbit, is overtaking it on the inside, and the loop is what our own passing looks like from here. This is the appearance that cost astronomy fifteen hundred years of epicycles, and you can watch it resolve into an overtaking manoeuvre by flipping to the Orrery view on the same date.</p>
 
+    <h3>Approach</h3>
+    <p>Select a planet and press <em>Approach</em>. The camera flies in and the marker becomes a world, mapped with real spacecraft imagery.</p>
+    <p>What is computed rather than drawn: the orientation, from the IAU's published pole direction and prime-meridian rate for each body, so the face turned towards you is the face that was turned that way on the date on the clock; and the lighting, from the true Sun direction, so the terminator falls where it falls and the panel tells you the latitude and longitude the Sun is standing over. Set Earth to noon UT and Africa is centred under the Sun. Advance twelve hours and the Pacific is.</p>
+    <p><strong>The sizes are a lie, and the page says by how much.</strong> At any honest scale you never see a globe — Earth is far under a pixel from anywhere you would want to watch the solar system from. So the approach view enlarges, and prints the factor it is using: <em>×3.8 thousand actual size</em>, recalculated for your exact camera. Nothing else on the page is exaggerated, and this is the one place that needed saying out loud.</p>
+    <p>Other things I have not pretended about. The bodies are drawn as spheres; Saturn is really flattened by a tenth and Jupiter by a sixteenth. Saturn's rings come from measured radii — the C, B and A rings with the Cassini division between the last two — but neither casts a shadow on the other, and edge-on they nearly vanish, which is true and is why they look so thin in 2026, a year after the plane crossing. Venus is its cloud deck, because that is all anyone has ever seen from outside. Uranus and Neptune are very nearly featureless in reality, so any banding on them is interpretation, not observation. The Moon's orientation omits the small libration terms and is good to a degree or two.</p>
+    <p>The maps are fetched only when you actually go and look, one body at a time, from this same domain. The page still weighs about sixty kilobytes until you ask for a world.</p>
+    <p>In <em>Sky</em>, the Moon is the exception that needs no exaggeration at all: it subtends half a degree, so narrow the field below about twelve degrees and it is simply drawn at the size it is, phase and all.</p>
+
     <h3>Controls</h3>
     <ul>
       <li>In the <em>Orrery</em>, drag to swing the camera around the system, scroll or pinch to move in and out, shift-drag to slide the whole view. <em>Top</em>, <em>Tilt</em> and <em>Edge on</em> are the three angles worth having; <em>Fly to selection</em> takes the camera to whatever is selected.</li>
@@ -429,8 +442,9 @@ button.t.on{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,161
     </ul>
 
     <h3>Colophon</h3>
-    <p>One HTML file. No frameworks, no libraries, no build step, no server, no analytics, no cookies, nothing phoning home. Two webfonts, a packed star catalogue, and about sixteen hundred lines of hand-written canvas and astronomy. It will keep working, unchanged, for as long as browsers run JavaScript.</p>
+    <p>One HTML file and ten images. No frameworks, no libraries, no build step, no server, no analytics, no cookies, nothing phoning home — the maps come from this domain, on demand, and only if you go looking for one. Two webfonts, a packed star catalogue, and about sixteen hundred lines of hand-written canvas and astronomy. It will keep working, unchanged, for as long as browsers run JavaScript.</p>
     <p>Planetary elements from <em>Approximate Positions of the Major Planets</em> (E. M. Standish, JPL Solar System Dynamics), the low-precision table valid 1800–2050. The timeline stops at both ends of that window rather than extrapolate into fiction. Precession is IAU 1976; nutation and aberration are not applied, which costs less than an arcminute. Sidereal time is mean, not apparent.</p>
+    <p>Surface maps are from <strong>Solar System Scope</strong>, <strong>CC BY 4.0</strong>, built from Messenger, Viking, Cassini and Hubble imagery with colours tuned to true-colour photography. Rotational elements are from the <strong>IAU Working Group on Cartographic Coordinates and Rotational Elements</strong> (2015 report).</p>
     <p>Star positions are an extract of the <strong>HYG database</strong> v3.8 by David Nash (astronexus), used and redistributed under <strong>CC BY-SA 4.0</strong> — that extract stays under the same licence. Constellation figures are from <strong>d3-celestial</strong>, copyright 2015 Olaf Frohn, BSD 3-Clause. The lunar theory is Paul Schlyter's abridged series. My thanks to all three; none of them had any part in the mistakes.</p>
     <p>The source is on GitHub at <a href="https://github.com/texas0418/orrery">texas0418/orrery</a> — the code MIT, the star extract still CC BY-SA 4.0, and <code>build-skydata.js</code> there if you want to rebuild the catalogue from upstream yourself.</p>
     <div class="rule"></div>
@@ -1004,8 +1018,205 @@ function drawLabels(placed) {
   }
 }
 
+/* ============================================================================
+   APPROACH — a body drawn as a lit sphere rather than a marker.
+   Orientation from the IAU Working Group on Cartographic Coordinates and
+   Rotational Elements (2015 report): pole direction a0/d0 and prime meridian
+   W0 + Wdot*d. Illumination is the real Sun direction, so the terminator and
+   the sub-solar point are computed, not drawn.
+   ========================================================================== */
+const ROT = {
+  mercury:{a0:281.0103,a0T:-0.0328,d0:61.4155,d0T:-0.0049,W0:329.5988,Wd:6.1385108,km:2439.7},
+  venus:  {a0:272.76,  a0T:0,      d0:67.16,  d0T:0,      W0:160.20,  Wd:-1.4813688,km:6051.8},
+  earth:  {a0:0.00,    a0T:-0.641, d0:90.00,  d0T:-0.557, W0:190.147, Wd:360.9856235,km:6371.0},
+  mars:   {a0:317.269, a0T:-0.107, d0:54.432, d0T:-0.0609,W0:176.049863,Wd:350.891982443297,km:3389.5},
+  jupiter:{a0:268.056595,a0T:-0.006499,d0:64.495303,d0T:0.002413,W0:284.95,Wd:870.5360000,km:69911},
+  saturn: {a0:40.589,  a0T:-0.036, d0:83.537, d0T:-0.004, W0:38.90,   Wd:810.7939024,km:58232},
+  uranus: {a0:257.311, a0T:0,      d0:-15.175,d0T:0,      W0:203.81,  Wd:-501.1600928,km:25362},
+  neptune:{a0:299.36,  a0T:0,      d0:43.46,  d0T:0,      W0:253.18,  Wd:536.3128492,km:24622},
+  moon:   {a0:269.9949,a0T:0.0031, d0:66.5392,d0T:0.0130, W0:38.3213, Wd:13.17635815,km:1737.4}
+};
+const AU_KM = 149597870.7;
+// equatorial -> ecliptic, the inverse of eclToEq
+const eqToEcl = (x, y, z) => [x, y * CE + z * SE, -y * SE + z * CE];
+
+// Body-fixed axes, returned in the J2000 ECLIPTIC frame the orrery works in.
+function bodyFrame(key, t) {
+  const R = ROT[key];
+  const T = century(t), d = jd(t) - J2000;
+  const a0 = (R.a0 + R.a0T * T) * D2R, d0 = (R.d0 + R.d0T * T) * D2R;
+  const W = (((R.W0 + R.Wd * d) % 360) + 360) % 360 * D2R;
+  const n = [Math.cos(d0)*Math.cos(a0), Math.cos(d0)*Math.sin(a0), Math.sin(d0)];
+  const q = [-Math.sin(a0), Math.cos(a0), 0];        // node of the body equator on the ICRF equator
+  const nq = cross(n, q);
+  const x = [q[0]*Math.cos(W) + nq[0]*Math.sin(W),
+             q[1]*Math.cos(W) + nq[1]*Math.sin(W),
+             q[2]*Math.cos(W) + nq[2]*Math.sin(W)];  // prime meridian, on the equator
+  const y = cross(n, x);
+  return { x: eqToEcl(...x), y: eqToEcl(...y), z: eqToEcl(...n), W: W * R2D };
+}
+// where the Sun stands overhead, in body coordinates
+function subSolar(key, t) {
+  const F = bodyFrame(key, t);
+  const p = key === 'moon' ? null : positionAt(byKey(key), century(t));
+  let s;
+  if (key === 'moon') {
+    const e = positionAt(EARTH, century(t)), m = moonGeo(t);
+    // vector from the Moon to the Sun = (Sun - Earth) - (Moon - Earth)
+    const md = m.km / AU_KM;
+    s = nrm([-e.x - m.x*md, -e.y - m.y*md, -e.z - m.z*md]);
+  } else s = nrm([-p.x, -p.y, -p.z]);
+  const lat = Math.asin(Math.max(-1, Math.min(1, dot3(s, F.z)))) * R2D;
+  let lon = Math.atan2(dot3(s, F.y), dot3(s, F.x)) * R2D;
+  lon = ((lon % 360) + 540) % 360 - 180;
+  return { lat, lon, dir: s };
+}
+
+/* ---------- textures, fetched only when you actually go and look ---------- */
+const TEX = {};
+function requestTex(key) {
+  if (TEX[key]) return TEX[key];
+  const rec = TEX[key] = { state: 'loading' };
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement('canvas');
+    c.width = img.width; c.height = img.height;
+    const g = c.getContext('2d', { willReadFrequently: true });
+    g.drawImage(img, 0, 0);
+    try {
+      const d = g.getImageData(0, 0, c.width, c.height);
+      rec.px = d.data; rec.w = c.width; rec.h = c.height; rec.state = 'ready';
+    } catch (e) { rec.state = 'error'; }
+    needsDraw = true;
+  };
+  img.onerror = () => { rec.state = 'error'; needsDraw = true; };
+  img.src = 'tex/' + key + '.jpg';
+  return rec;
+}
+
+// How many times larger than life the globe is being drawn. The compression is
+// nonlinear, so the local scale at radius r is d(scene)/d(AU) = pow * r^(pow-1).
+function exaggeration(b, Rpx, depth) {
+  const T = century(state.t), p = positionAt(b, T);
+  const r = Math.hypot(p.x, p.y, p.z);
+  const scenePerAU = state.pow * Math.pow(r, state.pow - 1);
+  const truePx = (ROT[b.key].km / AU_KM) * scenePerAU * pxAt(depth);
+  return truePx > 0 ? Rpx / truePx : Infinity;
+}
+
+const globeCv = document.createElement('canvas');
+const globeCtx = globeCv.getContext('2d');
+function drawGlobe(b, sx, sy, Rcss, depth, opt) {
+  const tex = requestTex(b.key);
+  const xf = (opt && opt.xf) || (v => v);
+  const F0 = bodyFrame(b.key, state.t);
+  const F = { x: xf(F0.x), y: xf(F0.y), z: xf(F0.z) };
+  const sun = xf(subSolar(b.key, state.t).dir);
+  const basis = (opt && opt.basis) || { right: CV.right, up: CV.up, fwd: CV.fwd };
+  const D = Math.max(1, Math.round(Rcss * DPR));
+  const size = D * 2;
+  if (globeCv.width !== size) { globeCv.width = size; globeCv.height = size; }
+  const out = globeCtx.createImageData(size, size);
+  const o = out.data;
+  const rx = basis.right, uy = basis.up, fw = basis.fwd;
+  const ready = tex.state === 'ready';
+  const tw = ready ? tex.w : 0, th = ready ? tex.h : 0, tp = ready ? tex.px : null;
+  for (let py = 0; py < size; py++) {
+    const dy = (py - D + .5) / D;
+    for (let px = 0; px < size; px++) {
+      const dx = (px - D + .5) / D;
+      const q = dx*dx + dy*dy;
+      if (q > 1) continue;
+      const nz = Math.sqrt(1 - q);
+      // screen right / up / toward the viewer
+      const nx = rx[0]*dx + uy[0]*(-dy) - fw[0]*nz;
+      const ny = rx[1]*dx + uy[1]*(-dy) - fw[1]*nz;
+      const nzz = rx[2]*dx + uy[2]*(-dy) - fw[2]*nz;
+      let r = 150, g = 150, bl = 150;
+      if (ready) {
+        const lat = Math.asin(Math.max(-1, Math.min(1, nx*F.z[0] + ny*F.z[1] + nzz*F.z[2])));
+        const lon = Math.atan2(nx*F.y[0] + ny*F.y[1] + nzz*F.y[2],
+                               nx*F.x[0] + ny*F.x[1] + nzz*F.x[2]);
+        let u = (lon * R2D + 180) / 360; u -= Math.floor(u);
+        const v = (90 - lat * R2D) / 180;
+        const ti = ((Math.min(th - 1, (v * th) | 0) * tw) + Math.min(tw - 1, (u * tw) | 0)) * 4;
+        r = tp[ti]; g = tp[ti+1]; bl = tp[ti+2];
+      }
+      let lit = nx*sun[0] + ny*sun[1] + nzz*sun[2];
+      lit = lit <= 0 ? 0 : Math.pow(lit, .78);
+      const k = 0.035 + 0.965 * lit;                 // a little ambient, not pure black
+      const edge = Math.min(1, (1 - Math.sqrt(q)) * D * 0.9);   // antialias the limb
+      const i = (py * size + px) * 4;
+      o[i] = r * k; o[i+1] = g * k; o[i+2] = bl * k;
+      o[i+3] = 255 * edge;
+    }
+  }
+  globeCtx.putImageData(out, 0, 0);
+  if (b.ring) drawRings(b, F, sx, sy, Rcss, sun, false, basis);
+  ctx.drawImage(globeCv, sx - Rcss, sy - Rcss, Rcss * 2, Rcss * 2);
+  if (b.ring) drawRings(b, F, sx, sy, Rcss, sun, true, basis);
+  return tex.state;
+}
+
+// Saturn's rings, from measured radii rather than a picture: C 74.5-92.0,
+// B 92.0-117.58, Cassini division 117.58-122.17, A 122.17-136.775 thousand km.
+const RING_BANDS = [[74.5,92.0,.16],[92.0,117.58,.55],[117.58,122.17,.05],[122.17,136.775,.34]];
+function drawRings(b, F, sx, sy, Rcss, sun, front, basis) {
+  const eqR = ROT[b.key].km, N = 220;
+  // a point on the ring plane, at angle `ang` and radius `rk` thousand km
+  const pt = (ang, rk) => {
+    const rr = rk * 1000 / eqR;
+    const c = Math.cos(ang), s = Math.sin(ang);
+    const v = [F.x[0]*c + F.y[0]*s, F.x[1]*c + F.y[1]*s, F.x[2]*c + F.y[2]*s];
+    return {
+      x: sx + (v[0]*basis.right[0] + v[1]*basis.right[1] + v[2]*basis.right[2]) * rr * Rcss,
+      y: sy - (v[0]*basis.up[0] + v[1]*basis.up[1] + v[2]*basis.up[2]) * rr * Rcss,
+      toward: -(v[0]*basis.fwd[0] + v[1]*basis.fwd[1] + v[2]*basis.fwd[2])
+    };
+  };
+  // how open the rings are to us — edge on they all but vanish, as they should
+  const tilt = Math.abs(F.z[0]*basis.fwd[0] + F.z[1]*basis.fwd[1] + F.z[2]*basis.fwd[2]);
+  for (const [r0, r1, alpha] of RING_BANDS) {
+    if (alpha < .08) continue;                       // the Cassini division is a gap
+    // the visible half is one contiguous arc, so collect its runs and fill each
+    let run = [];
+    const flush = () => {
+      if (run.length < 2) { run = []; return; }
+      ctx.beginPath();
+      for (let i = 0; i < run.length; i++) {
+        const p = pt(run[i], r1);
+        i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y);
+      }
+      for (let i = run.length - 1; i >= 0; i--) {
+        const p = pt(run[i], r0);
+        ctx.lineTo(p.x, p.y);
+      }
+      ctx.closePath();
+      ctx.fillStyle = `rgba(228,211,175,${alpha * (.34 + .5 * tilt)})`;
+      ctx.fill();
+      run = [];
+    };
+    for (let i = 0; i <= N; i++) {
+      const a = i / N * TAU;
+      if ((pt(a, r1).toward > 0) === front) run.push(a); else flush();
+    }
+    flush();
+  }
+}
+
+let approachInfo = null;
+const APPROACH_ZOOM = 4;
+// Only the body you have actually travelled to, and only once it would be
+// large enough to be worth drawing as a world.
+function globeRadius(b) {
+  if (state.mode !== 'orrery' || state.sel !== b || !ROT[b.key]) return 0;
+  if (CAM.zoom < APPROACH_ZOOM) return 0;
+  const grow = Math.pow(CAM.zoom / APPROACH_ZOOM, 1.35);
+  return Math.max(7, Math.min(Math.min(W, H) * 0.34, 7 * grow));
+}
+
 /* ---------- camera moves ---------- */
-function flyTo(b, ms = 900) {
+function flyTo(b, ms = 900, zoomOverride) {
   const T = century(state.t);
   let to = [0, 0, 0], zTo = 1;
   if (b) {
@@ -1013,6 +1224,7 @@ function flyTo(b, ms = 900) {
     to = toScene(p.x, p.y, p.z);
     const R = Math.max(sceneR(0.45), Math.hypot(...to));
     zTo = Math.max(1, Math.min(14, SCENE_MAX() / (R * 1.15)));
+    if (zoomOverride) zTo = zoomOverride;
   }
   CAM.fly = { t0: performance.now(), ms, from: [CAM.tx, CAM.ty, CAM.tz], to,
               zFrom: CAM.zoom, zTo };
@@ -1335,7 +1547,16 @@ function drawSky() {
       ctx.fillStyle = `rgba(255,244,214,${a})`;
       ctx.beginPath(); ctx.arc(s[0], s[1], 9, 0, TAU); ctx.fill();
     } else if (b === MOON) {
-      drawMoon(s, drawn.find(x => x.b === SUN), a);
+      // No exaggeration here: the Moon subtends about half a degree, so once
+      // the field is narrow enough it is simply drawn at the size it is.
+      const angR = Math.asin(1737.4 / moonGeo(state.t).km);
+      const Rpx = angR * SKY.scale;
+      if (Rpx >= 7) {
+        drawGlobe(MOON, s[0], s[1], Math.min(Rpx, Math.min(W, H) * .45), 1, {
+          basis: { right: SKY.basis.right, up: SKY.basis.up, fwd: SKY.basis.d },
+          xf: v => toHoriz(M, ...eclToEq(v[0], v[1], v[2]))
+        });
+      } else drawMoon(s, drawn.find(x => x.b === SUN), a);
     } else {
       const gg = ctx.createRadialGradient(s[0], s[1], 0, s[0], s[1], 15);
       gg.addColorStop(0, hexA(b.col, .5 * a)); gg.addColorStop(1, hexA(b.col, 0));
@@ -1731,6 +1952,7 @@ function select(b) {
      <div class="sub">${b.blurb}</div>` +
     rows.filter(r => !skip(r[1]))
         .map(r => `<div class="kv"><span>${r[0]}</span><span data-c="${r[1]}">—</span></div>`).join('') +
+    `<div class="evt" data-c="appr" hidden></div>` +
     `<div class="evt" data-c="evt" hidden></div>`;
   cell = {};
   for (const el of detailEl.querySelectorAll('[data-c]')) cell[el.dataset.c] = el;
@@ -1806,6 +2028,23 @@ function updateDetail() {
     set('light', fmtLight(rEarth));
     set('elong', (Math.abs(rl) * R2D).toFixed(1) + '° ' + (rl > 0 ? 'E' : 'W'));
   }
+  if (cell.appr) {
+    const a = approachInfo;
+    if (!a || a.b !== b) cell.appr.hidden = true;
+    else {
+      cell.appr.hidden = false;
+      const x = exaggeration(b, a.R, a.depth);
+      const ss = subSolar(b.key, state.t);
+      const per = Math.abs(360 / ROT[b.key].Wd);
+      cell.appr.innerHTML = `<span class="lbl">Approach</span>
+        <div class="when">${a.state === 'ready' ? '×' + fmtBig(x) + ' actual size'
+          : a.state === 'error' ? 'map unavailable' : 'loading map…'}</div>
+        <div class="note">Sun overhead at ${Math.abs(ss.lat).toFixed(1)}°${ss.lat < 0 ? 'S' : 'N'},
+          ${Math.abs(ss.lon).toFixed(1)}°${ss.lon < 0 ? 'W' : 'E'}. Turns once in
+          ${per < 1.2 ? (per * 24).toFixed(2) + ' hours' : per.toFixed(2) + ' days'}${ROT[b.key].Wd < 0 ? ', backwards' : ''}.
+          Radius ${ROT[b.key].km.toLocaleString()} km.</div>`;
+    }
+  }
   if (evtCache.key !== b.key || Math.abs(state.t - evtCache.at) > DAY / 2) {
     const now = performance.now();
     if (evtCache.key !== b.key || now - (evtCache.stamp || 0) > 250) {
@@ -1819,6 +2058,8 @@ function updateDetail() {
     }
   }
 }
+const fmtBig = n => n >= 1e6 ? (n / 1e6).toFixed(1) + ' million'
+  : n >= 1e3 ? Math.round(n / 100) * 100 / 1000 + ' thousand' : Math.round(n).toString();
 const compass = a => ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW']
   [Math.round(a / 22.5) % 16];
 function fmtLight(au) {
@@ -1841,6 +2082,14 @@ function frame(now) {
     needsDraw = true;
   }
   if (CAM.fly) stepFly(now);
+  else if (state.mode === 'orrery' && state.sel && !state.sel.sky &&
+           ROT[state.sel.key] && CAM.zoom >= APPROACH_ZOOM) {
+    const q = positionAt(state.sel, century(state.t));
+    const to = toScene(q.x, q.y, q.z);
+    if (Math.hypot(to[0]-CAM.tx, to[1]-CAM.ty, to[2]-CAM.tz) > 1e-9) {
+      CAM.tx = to[0]; CAM.ty = to[1]; CAM.tz = to[2]; needsDraw = true;
+    }
+  }
   if (!needsDraw) { requestAnimationFrame(frame); return; }
   needsDraw = false;
   ctx.clearRect(0, 0, W, H);
@@ -1882,9 +2131,18 @@ function frame(now) {
     }
   }
   const labels = [];
+  approachInfo = null;
   for (const it of items) {
     if (it.sun) { drawSun(); continue; }
     drawDrop(it.b, it.p, it.s);
+    const gR = globeRadius(it.b);
+    if (gR) {
+      const st = drawGlobe(it.b, it.s[0], it.s[1], gR, it.s[2]);
+      approachInfo = { b: it.b, R: gR, depth: it.s[2], state: st };
+      hits.push({ b: it.b, x: it.s[0], y: it.s[1] });
+      labels.push({ b: it.b, x: it.s[0], y: it.s[1], r: gR });
+      continue;
+    }
     const r = drawBody(it.b, it.p, it.s, state.sel === it.b, state.hover === it.b);
     hits.push({ b: it.b, x: it.s[0], y: it.s[1] });
     labels.push({ b: it.b, x: it.s[0], y: it.s[1], r });
@@ -2073,6 +2331,13 @@ for (const el of document.querySelectorAll('.vw')) el.onclick = () => {
   needsDraw = true; queueHash();
 };
 $('flySel').onclick = () => flyTo(state.sel && !state.sel.sky ? state.sel : null);
+$('approachBtn').onclick = () => {
+  const b = state.sel;
+  if (!b || b.sky || !ROT[b.key]) { $('approachBtn').textContent = 'Pick a planet'; 
+    setTimeout(() => $('approachBtn').textContent = 'Approach', 1400); return; }
+  requestTex(b.key);
+  flyTo(b, 1400, 26);
+};
 $('camReset').onclick = () => {
   CAM.az = -62; CAM.el = 58; CAM.fly = null;
   state.pan.x = state.pan.y = 0;
@@ -2192,7 +2457,7 @@ function readHash() {
   if (v.length === 3 && v.every(isFinite)) {
     state.view.az = ((v[0] % 360) + 360) % 360;
     state.view.alt = Math.max(-25, Math.min(88, v[1]));
-    state.view.fov = Math.max(12, Math.min(150, v[2]));
+    state.view.fov = Math.max(3, Math.min(150, v[2]));
     $('fov').value = Math.round(state.view.fov);
   }
   const k = parseInt(p.get('k'), 10);
@@ -2203,6 +2468,12 @@ function readHash() {
   if (p.get('m') === 'sky') setMode('sky');
   const b = [...BODIES, SUN, MOON].find(x => x.key === p.get('b'));
   if (b) select(b);
+  if (b && !b.sky && ROT[b.key] && CAM.zoom >= APPROACH_ZOOM) {
+    const q = positionAt(b, century(state.t));
+    const to = toScene(q.x, q.y, q.z);
+    CAM.tx = to[0]; CAM.ty = to[1]; CAM.tz = to[2];
+    requestTex(b.key);
+  }
 }
 
 /* ---------- about ---------- */
@@ -2261,7 +2532,7 @@ function pick(x, y) {
 cv.addEventListener('wheel', e => {
   e.preventDefault();
   if (state.mode === 'sky') {
-    state.view.fov = Math.max(12, Math.min(150, state.view.fov * Math.exp(e.deltaY * .0014)));
+    state.view.fov = Math.max(3, Math.min(150, state.view.fov * Math.exp(e.deltaY * .0014)));
     $('fov').value = Math.round(state.view.fov);
     needsDraw = true; queueHash();
   } else {
@@ -2279,7 +2550,7 @@ cv.addEventListener('touchmove', e => {
   const mx = (a.clientX + b.clientX) / 2, my = (a.clientY + b.clientY) / 2;
   if (pinch) {
     if (state.mode === 'sky') {
-      state.view.fov = Math.max(12, Math.min(150, state.view.fov * (pinch / d)));
+      state.view.fov = Math.max(3, Math.min(150, state.view.fov * (pinch / d)));
       $('fov').value = Math.round(state.view.fov);
       needsDraw = true;
     } else {
