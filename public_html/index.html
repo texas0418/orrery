@@ -188,10 +188,32 @@ button.t.pri{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,16
 .sg:hover{color:var(--ink2)}
 .sg.on{color:#fff;background:rgba(79,110,247,.30)}
 .hd-loc{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
-.hd-sub{padding:0 13px 8px;border-bottom:1px solid var(--bdr);margin-top:-4px}
-.locbtn{font-family:var(--fm);font-size:.63rem;color:var(--ac-l);background:none;border:none;
-  cursor:pointer;padding:0;text-align:right;line-height:1.3}
-.locbtn:hover{color:#fff;text-decoration:underline}
+.hd-sub{padding:0 13px 8px;border-bottom:1px solid var(--bdr);margin-top:-4px;
+  display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.locbtn{font-family:var(--fd);font-size:.63rem;font-weight:600;letter-spacing:.04em;
+  color:var(--ac-l);background:rgba(79,110,247,.14);border:1px solid rgba(139,161,255,.32);
+  border-radius:999px;cursor:pointer;padding:4px 10px;text-align:right;line-height:1.3;
+  display:flex;align-items:center;gap:5px;transition:.16s}
+.locbtn:hover{color:#fff;background:rgba(79,110,247,.3);border-color:rgba(139,161,255,.6)}
+.locbtn::before{content:"⌖";font-size:.85rem;line-height:1;opacity:.85}
+#placeSearch{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--bdr);
+  border-radius:9px;color:var(--ink);font-family:var(--fb);font-size:.82rem;padding:8px 11px}
+#placeSearch:focus{outline:none;border-color:var(--ac-l)}
+#placeList{max-height:172px;overflow-y:auto;margin:8px 0 2px}
+.place{display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;
+  background:none;border:none;cursor:pointer;color:var(--ink);font-family:var(--fb);
+  font-size:.8rem;padding:6px 9px;border-radius:7px}
+.place:hover{background:rgba(255,255,255,.06)}
+.place span:last-child{font-family:var(--fm);font-size:.66rem;color:var(--ink3)}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0 2px}
+.chip{font-family:var(--fd);font-size:.6rem;font-weight:600;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--ink2);background:rgba(255,255,255,.05);
+  border:1px solid var(--bdr);border-radius:999px;padding:5px 9px;cursor:pointer;transition:.15s}
+.chip:hover{color:#fff;border-color:var(--bdr2);background:rgba(255,255,255,.1)}
+.orline{display:flex;align-items:center;gap:9px;margin:14px 0 10px;
+  font-family:var(--fd);font-size:.58rem;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink3)}
+.orline::before,.orline::after{content:"";flex:1;height:1px;background:var(--bdr)}
 button.t.on{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,161,255,.42)}
 #locEdit{position:fixed;inset:0;z-index:70;background:rgba(3,4,8,.7);
   backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;
@@ -279,7 +301,8 @@ button.t.on{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,161
       <span class="lbl">Above the horizon</span>
       <button class="locbtn" id="locBtn">—</button>
     </div>
-    <div class="hd hd-sub"><span class="lbl" id="localTimeTop">—</span></div>
+    <div class="hd hd-sub"><span class="lbl" id="localTimeTop">—</span>
+      <span class="lbl" id="locCoords"></span></div>
     <div id="skyRows"></div>
     <div class="ft"><span class="lbl" id="localTime">—</span></div>
   </div>
@@ -337,8 +360,18 @@ button.t.on{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,161
 
 <div id="locEdit">
   <div class="card">
-    <span class="lbl">Observer</span>
-    <p>Everything is computed in your browser. Nothing about where you are is sent anywhere, stored, or logged.</p>
+    <span class="lbl">Stand somewhere else</span>
+    <p>Anywhere on Earth. Everything is computed in your browser — nothing about where you are is sent anywhere, stored, or logged.</p>
+    <input id="placeSearch" type="text" placeholder="Search a city…" autocomplete="off">
+    <div id="placeList"></div>
+    <div class="chips">
+      <button class="chip" data-p="North Pole">North Pole</button>
+      <button class="chip" data-p="The Equator">Equator</button>
+      <button class="chip" data-p="Longyearbyen">Svalbard</button>
+      <button class="chip" data-p="Atacama Desert">Atacama</button>
+      <button class="chip" data-p="South Pole">South Pole</button>
+    </div>
+    <div class="orline"><span>or set it exactly</span></div>
     <div class="locrow"><label for="latIn">Latitude</label><input id="latIn" type="number" step="0.01" min="-90" max="90"></div>
     <div class="locrow"><label for="lonIn">Longitude</label><input id="lonIn" type="number" step="0.01" min="-180" max="180"></div>
     <div class="locbtns">
@@ -377,7 +410,8 @@ button.t.on{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,161
 
     <h3>Earth's-eye</h3>
     <p>The <em>Sky</em> switch keeps the same positions and asks a different question: not where the planets are, but where you would have to look. The heliocentric vectors get rotated into equatorial coordinates, precessed from J2000 to the date on the clock, and turned into altitude and azimuth for wherever you're standing. Sunrise and sunset come out within a minute of published tables, which is the check I used to know the chain was right.</p>
-    <p>Your location is guessed from your browser's time zone, which is a city-sized guess and needs no permission. You can type exact coordinates, or hand over your real position — that one asks the browser and the answer never leaves this page. There is nowhere for it to go: no server, no request, no storage.</p>
+    <p>Your location is guessed from your browser's time zone, which is a city-sized guess and needs no permission. <strong>Click the place name at the top of the Tonight panel to stand somewhere else</strong> — search a hundred and forty cities, jump to the poles or the equator, or type coordinates for anywhere on Earth. You can also hand over your real position; that one asks the browser, and the answer never leaves this page. There is nowhere for it to go: no server, no request, no storage.</p>
+    <p>The far latitudes are worth the trip. Put yourself in Svalbard in June and the Sun circles overhead without setting all day; stand at the South Pole in the same week and it sits at −23° below the horizon and stays there, because at the poles a body's altitude is simply its declination and nothing rises or sets at all.</p>
     <p>The stars are real, 1,637 of them down to magnitude 5, roughly what a good dark sky gives you. The Moon comes from an abridged lunar theory that is good to a few arcminutes — enough to put it in the right place among the stars and to draw its phase, not enough to predict an occultation.</p>
 
     <h3>The loop</h3>
@@ -1051,6 +1085,34 @@ const TZ_PLACES = {
 'Pacific/Fiji':[-18.14,178.44,'Suva'],'Atlantic/Reykjavik':[64.15,-21.94,'Reykjavík'],
 'Antarctica/McMurdo':[-77.85,166.67,'McMurdo']
 };
+// Cities that share a zone with one of the above, plus a few latitudes that
+// are worth visiting because the sky does something you cannot see from home.
+const MORE_PLACES = [
+  [33.75,-84.39,'Atlanta'],[29.76,-95.37,'Houston'],[32.78,-96.80,'Dallas'],
+  [25.76,-80.19,'Miami'],[42.36,-71.06,'Boston'],[39.95,-75.17,'Philadelphia'],
+  [38.91,-77.04,'Washington DC'],[36.16,-86.78,'Nashville'],[35.23,-80.84,'Charlotte'],
+  [39.77,-86.16,'Indianapolis'],[44.98,-93.27,'Minneapolis'],[38.63,-90.20,'St Louis'],
+  [29.95,-90.07,'New Orleans'],[47.61,-122.33,'Seattle'],[45.52,-122.68,'Portland'],
+  [37.77,-122.42,'San Francisco'],[32.72,-117.16,'San Diego'],[36.17,-115.14,'Las Vegas'],
+  [40.76,-111.89,'Salt Lake City'],[35.08,-106.65,'Albuquerque'],[51.05,-114.07,'Calgary'],
+  [45.42,-75.70,'Ottawa'],[19.43,-99.13,'Guadalajara'],[-22.91,-43.17,'Rio de Janeiro'],
+  [-16.50,-68.15,'La Paz'],[-0.18,-78.47,'Quito'],[53.48,-2.24,'Manchester'],
+  [55.95,-3.19,'Edinburgh'],[48.14,11.58,'Munich'],[43.77,11.26,'Florence'],
+  [41.39,2.17,'Barcelona'],[59.44,24.75,'Tallinn'],[64.84,-147.72,'Fairbanks'],
+  [69.65,18.96,'Tromsø'],[78.22,15.65,'Longyearbyen'],[-54.80,-68.30,'Ushuaia'],
+  [-45.03,168.66,'Queenstown'],[27.99,86.93,'Everest Base Camp'],
+  [-24.00,-70.30,'Atacama Desert'],[19.82,-155.47,'Mauna Kea'],
+  [90,0,'North Pole'],[66.56,25.85,'Arctic Circle'],[0,0,'The Equator'],
+  [-23.44,-46.63,'Tropic of Capricorn'],[-90,0,'South Pole']
+];
+const ALL_PLACES = (() => {
+  const seen = new Set(), out = [];
+  for (const v of [...Object.values(TZ_PLACES), ...MORE_PLACES]) {
+    if (seen.has(v[2])) continue;
+    seen.add(v[2]); out.push({ lat: v[0], lon: v[1], label: v[2] });
+  }
+  return out.sort((a, b) => a.label.localeCompare(b.label));
+})();
 function guessLocation() {
   let tz = '';
   try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
@@ -1111,6 +1173,12 @@ function riseSet(b, t0, loc) {
     prev = f; prevA = a;
   }
   out.transit = bestT;
+  // Inside the polar circles a body can do neither, and the two cases are
+  // opposites: the midnight Sun and the polar night both have no rise and no set.
+  if (out.rise === null && out.set === null) {
+    out.alwaysUp = out.maxAlt > h0;
+    out.alwaysDown = !out.alwaysUp;
+  }
   return out;
 }
 function refine(alt, h0, lo, hi) {
@@ -1296,17 +1364,48 @@ function skyDarkTarget() {
   return Math.max(0, Math.min(1, -altOf(toHoriz(M, d[0], d[1], d[2])) / 15));
 }
 
+// A stereographic projection maps every circle on the sphere to a circle on
+// screen, and the horizon is a circle. So rather than tiling quads — which
+// blow up near the antipode and leave black wedges — solve for that circle
+// from three points and fill the correct side of it exactly.
+function circleFrom(a, b, c) {
+  const d = 2 * (a[0]*(b[1]-c[1]) + b[0]*(c[1]-a[1]) + c[0]*(a[1]-b[1]));
+  if (Math.abs(d) < 1e-9) return null;
+  const sa = a[0]*a[0] + a[1]*a[1], sb = b[0]*b[0] + b[1]*b[1], sc = c[0]*c[0] + c[1]*c[1];
+  const x = (sa*(b[1]-c[1]) + sb*(c[1]-a[1]) + sc*(a[1]-b[1])) / d;
+  const y = (sa*(c[0]-b[0]) + sb*(a[0]-c[0]) + sc*(b[0]-a[0])) / d;
+  return { x, y, r: Math.hypot(a[0]-x, a[1]-y) };
+}
 function drawGround(M) {
-  const STEP = 4;
-  ctx.fillStyle = 'rgba(6,7,10,.93)';
-  for (let a = 0; a < 360; a += STEP) {
-    const q = [azAltVec(a, 0), azAltVec(a + STEP, 0), azAltVec(a + STEP, -70), azAltVec(a, -70)]
-      .map(v => skyProj(v));
-    if (q.some(p => !p)) continue;
+  // Probe relative to where we're looking. Fixed azimuths put one probe behind
+  // the camera, which returns null and silently skips the fill.
+  const a0 = state.view.az;
+  const probes = [a0, a0 + 90, a0 - 90].map(a => skyProj(azAltVec(a, 0)));
+  const c = probes.every(Boolean) ? circleFrom(...probes) : null;
+  const span = Math.hypot(W, H);
+  if (!c || !isFinite(c.r) || c.r >= span * 40) {
+    // Looking dead level, the horizon projects to a straight line, not a circle.
+    if (probes[0] && probes[1]) {
+      const [p, q] = probes;
+      const ang = Math.atan2(q[1] - p[1], q[0] - p[0]);
+      ctx.save();
+      ctx.translate(p[0], p[1]); ctx.rotate(ang);
+      ctx.fillStyle = 'rgba(6,7,10,.93)';
+      ctx.fillRect(-span * 2, state.view.alt >= 0 ? 0 : -span * 2, span * 4, span * 2);
+      ctx.restore();
+    }
+  } else if (c && isFinite(c.r) && c.r < span * 40) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(6,7,10,.93)';
     ctx.beginPath();
-    ctx.moveTo(q[0][0], q[0][1]);
-    for (let i = 1; i < 4; i++) ctx.lineTo(q[i][0], q[i][1]);
-    ctx.closePath(); ctx.fill();
+    if (state.view.alt >= 0) {        // looking up: sky inside the circle, ground outside
+      ctx.rect(0, 0, W, H);
+      ctx.arc(c.x, c.y, c.r, 0, TAU, true);
+    } else {                          // looking down: ground is the inside
+      ctx.arc(c.x, c.y, c.r, 0, TAU);
+    }
+    ctx.fill();
+    ctx.restore();
   }
   ctx.strokeStyle = 'rgba(255,255,255,.22)'; ctx.lineWidth = 1;
   ctx.beginPath();
@@ -1671,9 +1770,11 @@ function updateDetail() {
       rsCache = { key: b.key, day, stamp: nowMs, val: riseSet(b, state.t, loc) };
     }
     const rs = rsCache.val;
-    set('rise', rs.rise ? fmtClock(rs.rise) : 'does not rise');
+    set('rise', rs.rise ? fmtClock(rs.rise)
+      : rs.alwaysUp ? 'up all day' : 'never rises');
     set('trans', rs.transit ? `${fmtClock(rs.transit)}  ${rs.maxAlt.toFixed(0)}°` : '—');
-    set('set', rs.set ? fmtClock(rs.set) : (rs.rise ? 'stays up' : '—'));
+    set('set', rs.set ? fmtClock(rs.set)
+      : rs.alwaysUp ? 'never sets' : (rs.rise ? 'stays up' : '—'));
     if (b === MOON) {
       const ph = moonPhase(state.t);
       set('phase', `${(ph.illum * 100).toFixed(0)}%  ${ph.waxing ? 'waxing' : 'waning'}`);
@@ -1996,13 +2097,46 @@ $('fov').addEventListener('input', e => {
 /* ---------- observer ---------- */
 function setLoc(l) {
   state.loc = l;
-  $('locBtn').textContent = (l.label ? l.label + '  ' : '') + fmtLatLon(l);
+  $('locBtn').textContent = l.label || fmtLatLon(l);
+  $('locBtn').title = (l.label ? l.label + ' — ' : '') + fmtLatLon(l) + '  ·  click to move';
   $('latIn').value = l.lat.toFixed(2);
   $('lonIn').value = l.lon.toFixed(2);
+  $('locCoords').textContent = fmtLatLon(l);
   rsCache = { key: null, day: null, val: null };
   needsDraw = true;
 }
-$('locBtn').onclick = () => { $('locEdit').classList.add('show'); $('geoNote').textContent = ''; };
+$('locBtn').onclick = () => {
+  $('locEdit').classList.add('show');
+  $('geoNote').textContent = '';
+  $('placeSearch').value = '';
+  renderPlaces('');
+  setTimeout(() => $('placeSearch').focus(), 30);
+};
+function renderPlaces(q) {
+  const s = q.trim().toLowerCase();
+  const hits = (s ? ALL_PLACES.filter(p => p.label.toLowerCase().includes(s)) : ALL_PLACES)
+    .slice(0, 60);
+  $('placeList').innerHTML = hits.length
+    ? hits.map((p, i) => `<button class="place" data-i="${i}"><span>${p.label}</span>
+        <span>${fmtLatLon(p)}</span></button>`).join('')
+    : '<div class="ev-wait">No match — set it by hand below.</div>';
+  for (const el of $('placeList').querySelectorAll('.place'))
+    el.onclick = () => pickPlace(hits[+el.dataset.i]);
+}
+function pickPlace(p) {
+  if (!p) return;
+  setLoc({ lat: p.lat, lon: p.lon, label: p.label });
+  $('locEdit').classList.remove('show');
+  queueHash();
+}
+$('placeSearch').addEventListener('input', e => renderPlaces(e.target.value));
+$('placeSearch').addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const first = $('placeList').querySelector('.place');
+  if (first) first.click();
+});
+for (const el of document.querySelectorAll('.chip'))
+  el.onclick = () => pickPlace(ALL_PLACES.find(p => p.label === el.dataset.p));
 $('locDone').onclick = () => {
   const lat = parseFloat($('latIn').value), lon = parseFloat($('lonIn').value);
   if (isFinite(lat) && isFinite(lon))
@@ -2029,6 +2163,7 @@ function writeHash() {
     p.set('m', 'sky');
     p.set('v', `${state.view.az.toFixed(0)},${state.view.alt.toFixed(0)},${state.view.fov.toFixed(0)}`);
     p.set('o', `${state.loc.lat.toFixed(2)},${state.loc.lon.toFixed(2)}`);
+    if (state.loc.label) p.set('pl', state.loc.label);
     if (state.track !== 3) p.set('k', state.track);
   } else {
     p.set('c', `${CAM.az.toFixed(0)},${CAM.el.toFixed(0)},${CAM.zoom.toFixed(2)}`);
@@ -2052,7 +2187,7 @@ function readHash() {
   if (isFinite(s) && s >= 25 && s <= 100) { state.pow = s / 100; $('pow').value = s; }
   const o = (p.get('o') || '').split(',').map(parseFloat);
   if (o.length === 2 && isFinite(o[0]) && isFinite(o[1]))
-    setLoc({ lat: o[0], lon: o[1], label: '' });
+    setLoc({ lat: o[0], lon: o[1], label: p.get('pl') || '' });
   const v = (p.get('v') || '').split(',').map(parseFloat);
   if (v.length === 3 && v.every(isFinite)) {
     state.view.az = ((v[0] % 360) + 360) % 360;
