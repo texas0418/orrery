@@ -389,7 +389,7 @@ button.t.on{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,161
       <li>In the <em>Orrery</em>, drag to swing the camera around the system, scroll or pinch to move in and out, shift-drag to slide the whole view. <em>Top</em>, <em>Tilt</em> and <em>Edge on</em> are the three angles worth having; <em>Fly to selection</em> takes the camera to whatever is selected.</li>
       <li>Click a body to select it. That also marks the ends of its long axis — perihelion and aphelion — which is where the off-centre Sun stops being an abstraction.</li>
       <li><strong>Space</strong> play/pause · <strong>←/→</strong> step a day · <strong>N</strong> return to now · <strong>Esc</strong> deselect</li>
-      <li>The playback buttons step through speeds from an hour per second up to a decade per second, in both directions.</li>
+      <li>The playback buttons step through speeds from a minute per second up to a decade per second, in both directions. In <em>Sky</em> they stop at six hours per second and say so: past that the sky turns further between one frame and the next than a frame can show, so it stops being motion and becomes noise. The day/night tint is also rate-limited in real time, so scrubbing across a century fades rather than strobes.</li>
       <li>In <em>Sky</em>, drag to look around, scroll to change the field of view, and click a body to walk the view over to it.</li>
       <li>The address bar keeps the date, selection, view and location, so anything you land on is a link you can send to someone.</li>
     </ul>
@@ -664,7 +664,7 @@ const state = {
   mode: 'orrery',        // 'orrery' | 'sky'
   t: clampT(Date.now()),
   playing: false,
-  rateIdx: 3,            // index into RATES
+  rateIdx: 5,            // index into RATES — 1 week/sec
   dir: 1,
   zoom: 1,
   pan: { x: 0, y: 0 },
@@ -676,7 +676,10 @@ const state = {
   tab: 'bodies',
   track: 3               // ± months of apparent-path trail, 0 = off
 };
+const SKY_MAX_RATE = 3;      // '6 hours / sec' — see clampRate()
 const RATES = [
+  { s: 'minute', ms: 60e3,          lbl: '1 minute / sec' },
+  { s: '10 min', ms: 600e3,         lbl: '10 minutes / sec' },
   { s: 'hour',   ms: 3600e3,        lbl: '1 hour / sec'   },
   { s: '6 hours',ms: 6 * 3600e3,    lbl: '6 hours / sec'  },
   { s: 'day',    ms: DAY,           lbl: '1 day / sec'    },
@@ -1154,7 +1157,14 @@ function drawSky() {
   setupSky();
   const sunH = toHoriz(M, ...geoDir(SUN, state.t));
   const sunAlt = altOf(sunH);
-  const dark = Math.max(0, Math.min(1, -sunAlt / 15));      // 0 = full day, 1 = night
+  // Rate-limit the day/night tint in REAL time, not simulated time. Scrubbing
+  // across a century would otherwise strobe the whole screen; positions stay
+  // exact, only the tint is allowed to lag.
+  const target = Math.max(0, Math.min(1, -sunAlt / 15));
+  const step = Math.min(1, frameDt * 1.6);                  // full swing >= 0.6s
+  skyDark += (target - skyDark) * step;
+  if (Math.abs(target - skyDark) < .004) skyDark = target;
+  const dark = skyDark;
 
   // --- background, tinted by how far the Sun is below the horizon ---
   const mix = (a, b, u) => a.map((v, i) => Math.round(v + (b[i] - v) * u));
@@ -1278,6 +1288,13 @@ function drawSky() {
   for (const o of drawn) skyHits.push({ b: o.b, x: o.s[0], y: o.s[1] });
 }
 const skyHits = [];
+let skyDark = 1;          // eased day/night tint, see drawSky()
+function skyDarkTarget() {
+  const loc = state.loc;
+  const M = skyMatrix(state.t, loc.lat, loc.lon);
+  const d = geoDir(SUN, state.t);
+  return Math.max(0, Math.min(1, -altOf(toHoriz(M, d[0], d[1], d[2])) / 15));
+}
 
 function drawGround(M) {
   const STEP = 4;
@@ -1648,8 +1665,10 @@ function updateDetail() {
     set('alt', (alt >= 0 ? '+' : '') + alt.toFixed(1) + '°');
     set('az', azOf(h).toFixed(1) + '° ' + compass(azOf(h)));
     const day = Math.floor(state.t / DAY);
-    if (rsCache.key !== b.key || rsCache.day !== day) {
-      rsCache = { key: b.key, day, val: riseSet(b, state.t, loc) };
+    const nowMs = performance.now();
+    if ((rsCache.key !== b.key || rsCache.day !== day) &&
+        (rsCache.key !== b.key || nowMs - (rsCache.stamp || 0) > 250)) {
+      rsCache = { key: b.key, day, stamp: nowMs, val: riseSet(b, state.t, loc) };
     }
     const rs = rsCache.val;
     set('rise', rs.rise ? fmtClock(rs.rise) : 'does not rise');
@@ -1709,8 +1728,10 @@ function fmtLight(au) {
 /* ---------- loop ---------- */
 let last = performance.now();
 let needsDraw = true;
+let frameDt = 1 / 60;
 function frame(now) {
   const dt = Math.min(now - last, 100) / 1000; last = now;
+  frameDt = dt;
   if (state.playing) {
     const nt = clampT(state.t + RATES[state.rateIdx].ms * state.dir * dt);
     if (nt === state.t) setPlaying(false);       // hit the edge of the ephemeris
@@ -1724,6 +1745,7 @@ function frame(now) {
   ctx.clearRect(0, 0, W, H);
   if (state.mode === 'sky') {
     drawSky();
+    if (skyDark !== skyDarkTarget()) needsDraw = true;   // let the tint finish easing
     if (state.sel) updateDetail();
     updateTonight();
     requestAnimationFrame(frame);
@@ -1784,8 +1806,9 @@ const queueHash = () => { clearTimeout(hashTimer); hashTimer = setTimeout(writeH
 function syncTransport() {
   stampEl.textContent = fmtStamp(state.t);
   if (!scrubbing) scrub.value = tToScrub(state.t);
+  const capped = state.mode === 'sky' && state.rateIdx >= SKY_MAX_RATE;
   rateEl.textContent = state.playing
-    ? (state.dir < 0 ? '← ' : '') + RATES[state.rateIdx].lbl
+    ? (state.dir < 0 ? '← ' : '') + RATES[state.rateIdx].lbl + (capped ? '  (sky limit)' : '')
     : 'paused';
   if (!$('paneEvents').hidden) markNear();
 }
@@ -1802,6 +1825,13 @@ function setPlaying(v) {
   queueHash();
 }
 $('play').onclick = () => setPlaying(!state.playing);
+function clampRate() {
+  if (state.mode === 'sky' && state.rateIdx > SKY_MAX_RATE) {
+    state.rateIdx = SKY_MAX_RATE;
+    return true;
+  }
+  return false;
+}
 function setRate(delta) {
   if (!state.playing) setPlaying(true);
   if (delta > 0) {
@@ -1811,6 +1841,7 @@ function setRate(delta) {
     if (state.dir > 0) { if (state.rateIdx > 0) state.rateIdx--; else state.dir = -1; }
     else state.rateIdx = Math.min(RATES.length - 1, state.rateIdx + 1);
   }
+  clampRate();
   syncTransport();
 }
 $('fwd').onclick = () => setRate(1);
@@ -1928,6 +1959,7 @@ function setMode(m) {
   $('spreadWrap').hidden = sky;
   $('fieldWrap').hidden = !sky;
   document.body.classList.toggle('sky', sky);
+  if (clampRate()) syncTransport();
   // a body that only exists in one mode can't stay selected in the other
   if (state.sel && ((sky && state.sel.home) || (!sky && state.sel.sky))) select(null);
   else if (state.sel) select(state.sel);
