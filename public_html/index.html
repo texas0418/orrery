@@ -464,13 +464,15 @@ button.t.on{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,161
 
     <h3 data-toc="Moons">Nineteen moons</h3>
     <p>Approach a planet and its moons come with it, drawn to the same exaggeration as the planet so the system is internally to scale even though the whole thing is enlarged. Jupiter with the Galileans wheeling round it is the view Galileo had in 1610, and the one that ended the geocentric universe.</p>
-    <p>Click one, or pick it from the list beneath its planet, and you can go to it the same way you go to a planet — the camera flies over and drops into low orbit.</p>
-    <p><strong>Twelve of them are mapped</strong>, from spacecraft: Voyager and Galileo for Io, Europa, Ganymede and Callisto; Cassini for Titan, Enceladus, Dione, Rhea and Iapetus; Voyager 2 for Triton; Viking for Phobos; and our own Moon. Their orientation needs no rotation table, because a synchronous satellite keeps one face to its planet — which is also the IAU convention for these bodies, longitude zero pointing at the primary. So the hemisphere turned towards you is the one that really is, and it is the same hemisphere anyone has ever charted.</p>
+    <p>Click one, or pick it from the list beneath its planet, and you can go to it the same way you go to a planet — the camera flies over and drops into low orbit. Its planet and its sibling moons come with it, placed by a perspective camera at the true altitude and sized by true angular radius. <strong>Stand off Europa and Jupiter is 11.9° wide</strong> — twenty-three full Moons — filling a quarter of the view, with Europa a small disc in front of it. That is not a flourish; it is what the geometry gives when you stop compressing it.</p>
+    <p><strong>Fourteen of them are mapped</strong>, from spacecraft: Voyager and Galileo for Io, Europa, Ganymede and Callisto; Cassini for Titan, Enceladus, Tethys, Dione, Rhea and Iapetus; Voyager 2 for Triton; New Horizons for Charon; Viking for Phobos; and our own Moon. Their orientation needs no rotation table, because a synchronous satellite keeps one face to its planet — which is also the IAU convention for these bodies, longitude zero pointing at the primary. So the hemisphere turned towards you is the one that really is, and it is the same hemisphere anyone has ever charted.</p>
     <p>Several of those maps are <strong>monochrome</strong>, because the controlled mosaics they come from are. Io is famously sulphur-yellow and arrives here in grey. I would rather hand you the real basemap without its colour than tint it to look like the photograph you were expecting. Iapetus loses nothing at all: its dark and bright hemispheres are a brightness difference, and that is exactly what a monochrome mosaic records.</p>
-    <p>Coverage is honest too. Triton was photographed by one spacecraft on one pass, so its map covers the hemisphere Voyager 2 saw and no more. <strong>Eight moons have no map here</strong> — Tethys, Mimas' absent neighbours among the Uranian five, Deimos and Charon among them — and those arrive as shape and sunlight only: the size factor and the lit fraction are real, the face is not.</p>
+    <p>Coverage is honest too. Triton was photographed by one spacecraft on one pass, so its map covers the hemisphere Voyager 2 saw and no more. <strong>Five moons have no map, for a reason worth knowing.</strong> Voyager 2 passed Uranus once, in 1986, with the planet's pole aimed almost at the Sun — so only the southern hemispheres of Miranda, Ariel, Umbriel, Titania and Oberon have ever been photographed at all. There is no global mosaic to have. Those five and Deimos arrive as shape and sunlight only: the size factor and the lit fraction are real, the face is not.</p>
     <p>They are in the sky as well. Narrow the field below about a degree and Io, Europa, Ganymede and Callisto string out along the ecliptic beside Jupiter, arranged as they actually are that night — which is a real observing aid, because they are a binocular target and the pattern changes every few hours.</p>
     <p>Getting them right took two goes. JPL publishes mean elements for satellites, referenced to each planet's Laplace plane, and they looked ideal. They are not: their orbital <em>phases</em> are out by as much as 178°, which would have put Io on the wrong side of Jupiter — the most convincing kind of wrong. So instead each moon was sampled from JPL Horizons every 150 to 731 days across 1800–2050 and its elements fitted to that, exactly as the asteroids were. A moon keeps to its planet's equatorial plane and a planet's pole barely moves, so the inclination and node in ecliptic coordinates stay nearly constant and a straight line through them holds.</p>
-    <p>Fourteen of them now sit within a quarter of a degree of Horizons; Io, Titan, Iapetus, Dione and Charon are inside five hundredths. The worst are Phobos at 6° — it orbits Mars three times a day and is dragged about by the planet's bulge — and Tethys at 2°. <strong>Mimas is missing.</strong> It is locked in a two-to-one resonance with Tethys and librates, and no fixed ellipse can follow that: the fit put it 111° along its orbit from where it belongs, so it is not here at all. Same reasoning as Hygiea in the belt.</p>
+    <p>Every one is checked against Horizons at four dates spread across the whole window. Fourteen of the nineteen land within a degree and twelve within a third of one; Charon, Titan, Dione and Io are inside a twentieth. The stubborn ones are Triton at 4.9° and Miranda at 4.6°, then Tethys, Phobos and Deimos between 1.8 and 2.3.</p>
+    <p>Phobos was the interesting one. It went round Mars three times a day and a straight line in longitude put it 12° out — because Phobos is <em>spiralling in</em>. Tides are dragging it down about two centimetres a year and its orbital period is measurably shortening, so its mean motion is accelerating and no constant rate can describe it. Giving the longitude a quadratic term brought it to 2.2°. That is a real physical effect showing up as a curve in a fit, which is the sort of thing that makes a number worth chasing.</p>
+    <p><strong>Mimas is missing.</strong> It is locked in a two-to-one resonance with Tethys and librates, and no fixed ellipse can follow that: the fit put it 111° along its orbit from where it belongs, so it is not here at all. Same reasoning as Hygiea in the belt.</p>
 
     <h3>Controls</h3>
     <ul>
@@ -598,7 +600,7 @@ function elementsAt(b, T) {
     a: b.a[0] + b.a[1] * T,
     e: b.e[0] + b.e[1] * T,
     I: (b.I[0] + b.I[1] * T) * D2R,
-    L: b.L[0] + b.L[1] * T,
+    L: b.L[0] + b.L[1] * T + (b.L[2] || 0) * T * T,   // quadratic: Phobos is spiralling in
     w: b.w[0] + b.w[1] * T,
     O: b.O[0] + b.O[1] * T
   };
@@ -1175,11 +1177,11 @@ function subSolar(key, t) {
    ========================================================================== */
 const MOONS = [
   { key:'phobos', name:'Phobos', of:'mars', km:11.1, col:'#8d8378',
-    a:[0.0000626917,-0.0000000000], e:[0.0151210,+0.0000036], I:[26.715346,+0.002697],
-    L:[256.683302,41231035.764678], w:[67.667904,+15895.037059], O:[82.905707,-0.195861] },
+    a:[0.0000626917,-0.0000000001], e:[0.0151241,+0.0000084], I:[26.731328,-0.006171],
+    L:[257.223840,41231054.676059,+12.586448], w:[93.026081,-2092.662021], O:[82.853499,-0.237273] },
   { key:'deimos', name:'Deimos', of:'mars', km:6.2, col:'#8d8378',
-    a:[0.0001568134,-0.0000000000], e:[0.0002721,+0.0000054], I:[25.797052,+0.056828],
-    L:[300.633455,10415537.909173], w:[289.895333,+654.523028], O:[83.112677,+0.000781] },
+    a:[0.0001568138,+0.0000000004], e:[0.0002990,+0.0000161], I:[25.786141,+0.048613],
+    L:[300.633633,10415537.937777,+0.018828], w:[279.282930,+655.957753], O:[83.102934,+0.013620] },
   { key:'io', name:'Io', of:'jupiter', km:1821.6, col:'#e0cf7a',
     a:[0.0028210958,+0.0000000001], e:[0.0041776,+0.0000009], I:[2.214970,-0.000830],
     L:[18.177981,7432434.202066], w:[47.385237,-27010.472985], O:[337.868255,-0.056609] },
@@ -1188,7 +1190,7 @@ const MOONS = [
     L:[212.737507,3702711.805924], w:[227.287766,-27010.601344], O:[338.602740,+0.456060] },
   { key:'ganymede', name:'Ganymede', of:'jupiter', km:2634.1, col:'#b9a894',
     a:[0.0071565519,-0.0000000579], e:[0.0016158,-0.0000639], I:[2.215847,+0.081889],
-    L:[220.015770,1837850.604883], w:[158.082761,+454.813620], O:[338.959752,-0.702490] },
+    L:[220.015721,1837850.603498,-0.000912], w:[158.082761,+454.813620], O:[338.959752,-0.702490] },
   { key:'callisto', name:'Callisto', of:'jupiter', km:2410.3, col:'#8e8074',
     a:[0.0125879180,+0.0000000488], e:[0.0073533,-0.0000070], I:[2.023474,+0.040321],
     L:[79.200363,787883.422006], w:[351.879823,+67.108087], O:[338.935511,-6.705943] },
@@ -1202,20 +1204,20 @@ const MOONS = [
     a:[0.0025244370,+0.0000000003], e:[0.0022417,+0.0000038], I:[28.045908,+0.000864],
     L:[306.477577,4804313.356893], w:[344.247836,+3077.230874], O:[169.521947,-0.019409] },
   { key:'rhea', name:'Rhea', of:'saturn', km:763.8, col:'#c6c2b8',
-    a:[0.0035243337,-0.0000000005], e:[0.0010099,-0.0000011], I:[28.018348,-0.003275],
-    L:[181.732059,2910678.952495], w:[334.701962,+51.123931], O:[169.449560,-0.119059] },
+    a:[0.0035243286,-0.0000000111], e:[0.0009979,-0.0000122], I:[28.021940,+0.001613],
+    L:[181.730842,2910678.911808,-0.027067], w:[334.130801,+51.473707], O:[169.447639,-0.121154] },
   { key:'titan', name:'Titan', of:'saturn', km:2574.7, col:'#d9a441',
     a:[0.0081682157,-0.0000000049], e:[0.0287689,-0.0001555], I:[27.726665,+0.096569],
     L:[137.087289,824623.999517], w:[333.536799,+50.884119], O:[169.231834,-0.500579] },
   { key:'iapetus', name:'Iapetus', of:'saturn', km:734.5, col:'#a2917c',
     a:[0.0238084733,-0.0000000120], e:[0.0283704,-0.0000417], I:[17.286054,-0.995456],
-    L:[217.381556,165748.758595], w:[8.654684,+11.275113], O:[139.618282,-3.715375] },
+    L:[217.372084,165748.495862,-0.173054], w:[8.654684,+11.275113], O:[139.618282,-3.715375] },
   { key:'miranda', name:'Miranda', of:'uranus', km:235.8, col:'#b9c2c6',
     a:[0.0008681509,+0.0000000002], e:[0.0013702,-0.0000002], I:[97.684943,-0.013524],
     L:[131.072640,9302576.539726], w:[58.067889,+2003.214885], O:[167.470847,-0.236048] },
   { key:'ariel', name:'Ariel', of:'uranus', km:578.9, col:'#c3ccd0',
-    a:[0.0012763942,-0.0000000002], e:[0.0013229,-0.0000185], I:[97.730192,+0.001172],
-    L:[5.728640,5217072.649021], w:[245.561513,+620.537444], O:[167.653509,+0.003724] },
+    a:[0.0012763944,+0.0000000000], e:[0.0013268,+0.0000123], I:[97.729935,+0.000803],
+    L:[5.714435,5217072.196153,-0.300500], w:[242.547794,+622.712343], O:[167.653399,+0.003680] },
   { key:'umbriel', name:'Umbriel', of:'uranus', km:584.7, col:'#8d949a',
     a:[0.0017780918,-0.0000000010], e:[0.0039525,-0.0002498], I:[97.742122,+0.003420],
     L:[53.866840,3172885.673734], w:[154.097586,+280.037367], O:[167.671547,+0.016456] },
