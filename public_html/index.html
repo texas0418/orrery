@@ -1258,7 +1258,7 @@ MOONS.unshift({ key:'luna', name:'Moon', of:'earth', km:1737.4, col:'#dcdcd2', s
 MOON_NOTE.luna = 'Ours. Drifting away four centimetres a year, and always showing the same face.';
 // stamped last, so anything added above is covered
 for (const m of MOONS) { m.moon = true; m.blurb = MOON_NOTE[m.key] || ''; m.r = 2.2; }
-const MOON_MAP_LIST = ['callisto', 'dione', 'enceladus', 'europa', 'ganymede', 'iapetus', 'io', 'luna', 'phobos', 'rhea', 'titan', 'triton'];                 // filled below with whatever maps ship
+const MOON_MAP_LIST = ['callisto', 'charon', 'dione', 'enceladus', 'europa', 'ganymede', 'iapetus', 'io', 'luna', 'phobos', 'rhea', 'tethys', 'titan', 'triton'];                 // filled below with whatever maps ship
 const MOON_MAPS = new Set(MOON_MAP_LIST);
 const moonsOf = k => MOONS.filter(m => m.of === k);
 
@@ -1348,7 +1348,7 @@ function drawGlobe(b, sx, sy, Rcss, depth, opt) {
   // implied distance to the centre, in body radii, from the drawn angular size
   const sinT = Rcss / Math.hypot(f, Rcss);
   const D = 1 / Math.max(1e-9, sinT);
-  globeDist = D;
+  if (!opt || !opt.companion) globeDist = D;
   const rx = basis.right, uy = basis.up, fw = basis.fwd;
   const ready = tex.state === 'ready';
   const tw = ready ? tex.w : 0, th = ready ? tex.h : 0, tp = ready ? tex.px : null;
@@ -1406,6 +1406,60 @@ function occlHidesMoon(m, q) {
   const p = moonHelio(m, state.t);
   const km = Math.hypot(p.x - o.p.x, p.y - o.p.y, p.z - o.p.z) * AU_KM;
   return km > o.camKm;
+}
+// Everything near the body you have flown to, drawn at TRUE relative offsets
+// and TRUE relative sizes using that body's own pixels-per-kilometre. So from
+// Europa, Jupiter is a globe 23 full-Moons wide, because that is what it is.
+// Everything near the body you have flown to, projected through a real
+// perspective camera placed at the implied true altitude. A linear
+// pixels-per-kilometre scale is only valid within a radius or two of the
+// anchor; Jupiter is 433 Europa-radii away and needs the real thing.
+function drawCompanions(anchor, s, Rg, front) {
+  const Rk = radiusOf(anchor.key);
+  if (!Rk) return;
+  const f = CV.f;
+  const D = 1 / Math.max(1e-9, Rg / Math.hypot(f, Rg));   // altitude in anchor radii
+  const camDist = D * Rk;                                  // km from the anchor's centre
+  const ap = helioOf(anchor, state.t);
+  const near = anchor.moon
+    ? [byKey(anchor.of), ...moonsOf(anchor.of).filter(m => m !== anchor)]
+    : moonsOf(anchor.key);
+  const list = [];
+  for (const b of near) {
+    const p = helioOf(b, state.t);
+    // position relative to the anchor, in km, then relative to the camera
+    const rx = (p.x - ap.x) * AU_KM, ry = (p.y - ap.y) * AU_KM, rz = (p.z - ap.z) * AU_KM;
+    const vx = rx + CV.fwd[0] * camDist, vy = ry + CV.fwd[1] * camDist, vz = rz + CV.fwd[2] * camDist;
+    const z = vx*CV.fwd[0] + vy*CV.fwd[1] + vz*CV.fwd[2];
+    if (z <= 1) continue;                                  // behind the camera
+    const X = vx*CV.right[0] + vy*CV.right[1] + vz*CV.right[2];
+    const Y = vx*CV.up[0]    + vy*CV.up[1]    + vz*CV.up[2];
+    const dist = Math.hypot(vx, vy, vz);
+    const rk = radiusOf(b.key);
+    list.push({ b, z, dist,
+      x: s[0] + f * X / z, y: s[1] - f * Y / z,
+      r: rk >= dist ? Rg * 4 : f * rk / Math.sqrt(dist*dist - rk*rk) });
+  }
+  list.sort((a, c) => c.dist - a.dist);                    // far first
+  for (const it of list) {
+    const isFront = it.z < camDist;
+    if (isFront !== !!front) continue;
+    if (!isFront && Math.hypot(it.x - s[0], it.y - s[1]) + it.r < Rg) continue;  // fully behind
+    if (it.r >= 4) drawGlobe(it.b, it.x, it.y, it.r, it.z, { companion: true });
+    else {
+      ctx.fillStyle = it.b.col;
+      ctx.beginPath(); ctx.arc(it.x, it.y, Math.max(1.6, it.r), 0, TAU); ctx.fill();
+    }
+    if (state.sel === it.b || state.hover === it.b) {
+      ctx.strokeStyle = hexA(it.b.col, state.sel === it.b ? .85 : .45); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(it.x, it.y, Math.max(it.r, 2) + 7, 0, TAU); ctx.stroke();
+    }
+    hits.push({ b: it.b, x: it.x, y: it.y });
+    ctx.font = '600 10px Outfit, system-ui, sans-serif';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = 'rgba(255,255,255,.62)';
+    ctx.fillText(it.b.name.toUpperCase(), it.x + Math.max(it.r, 3) + 7, it.y);
+  }
 }
 function drawMoons(b, s, Rg, pp) {
   const ms = moonsOf(b.key);
@@ -2552,8 +2606,13 @@ function drawFrame() {
     }
   }
   occlRef = occl;
+  const companionOf = occl && (occl.b.moon
+    ? new Set([occl.b.of, ...moonsOf(occl.b.of).map(m => m.key)])
+    : new Set(moonsOf(occl.b.key).map(m => m.key)));
   const hidden = it => {
     if (!occl || it.b === occl.b || it.sun) return false;
+    if (companionOf && companionOf.has(it.b.key)) return true;   // drawn by drawCompanions
+    if (Math.hypot(it.s[0] - occl.s[0], it.s[1] - occl.s[1]) + (it.r || 0) < occl.R) return true;
     if (Math.hypot(it.s[0] - occl.s[0], it.s[1] - occl.s[1]) > occl.R) return false;
     const q = it.p;
     const km = Math.hypot(q.x - occl.p.x, q.y - occl.p.y, q.z - occl.p.z) * AU_KM;
@@ -2567,8 +2626,10 @@ function drawFrame() {
     drawDrop(it.b, it.p, it.s);
     const gR = globeRadius(it.b);
     if (gR) {
-      drawMoons(it.b, it.s, gR, it.p);
+      if (!it.b.moon) drawMoons(it.b, it.s, gR, it.p);   // orbit paths for a planet
+      drawCompanions(it.b, it.s, gR, false);             // behind the anchor
       const st = drawGlobe(it.b, it.s[0], it.s[1], gR, it.s[2]);
+      drawCompanions(it.b, it.s, gR, true);              // in front of it
       approachInfo = { b: it.b, R: gR, depth: it.s[2], state: st };
       hits.push({ b: it.b, x: it.s[0], y: it.s[1] });
       labels.push({ b: it.b, x: it.s[0], y: it.s[1], r: gR });
