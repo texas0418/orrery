@@ -1253,10 +1253,11 @@ const MOON_NOTE = {
   triton:'Orbits backwards, so Neptune caught it. Geysers of nitrogen.',
   charon:'Half Pluto&rsquo;s width. The two swing round a point in the space between them.'
 };
-for (const m of MOONS) { m.moon = true; m.blurb = MOON_NOTE[m.key] || ''; m.r = 2.2; }
 MOONS.unshift({ key:'luna', name:'Moon', of:'earth', km:1737.4, col:'#dcdcd2', special:'luna',
-  L:[0, 481267.881],
-  blurb:'Ours. Drifting away four centimetres a year, and always showing the same face.' });
+  L:[0, 481267.881] });
+MOON_NOTE.luna = 'Ours. Drifting away four centimetres a year, and always showing the same face.';
+// stamped last, so anything added above is covered
+for (const m of MOONS) { m.moon = true; m.blurb = MOON_NOTE[m.key] || ''; m.r = 2.2; }
 const MOON_MAP_LIST = ['callisto', 'dione', 'enceladus', 'europa', 'ganymede', 'iapetus', 'io', 'luna', 'phobos', 'rhea', 'titan', 'triton'];                 // filled below with whatever maps ship
 const MOON_MAPS = new Set(MOON_MAP_LIST);
 const moonsOf = k => MOONS.filter(m => m.of === k);
@@ -1397,6 +1398,15 @@ let globeDist = 1e9;      // implied camera distance in body radii, set by drawG
 
 // A moon's offset is drawn at the same exaggeration as its planet, so the
 // system is internally to scale even though the whole thing is enlarged.
+let occlRef = null;
+function occlHidesMoon(m, q) {
+  const o = occlRef;
+  if (!o || o.b === m) return false;
+  if (Math.hypot(q[0] - o.s[0], q[1] - o.s[1]) > o.R) return false;
+  const p = moonHelio(m, state.t);
+  const km = Math.hypot(p.x - o.p.x, p.y - o.p.y, p.z - o.p.z) * AU_KM;
+  return km > o.camKm;
+}
 function drawMoons(b, s, Rg, pp) {
   const ms = moonsOf(b.key);
   if (!ms.length) return;
@@ -1422,6 +1432,7 @@ function drawMoons(b, s, Rg, pp) {
   for (const { m, q } of drawn) {
     const r = Math.max(1.6, Math.min(Rg * 0.9, m.km / Rk * Rg));
     if (q[2] > 0 && Math.hypot(q[0]-s[0], q[1]-s[1]) < Rg) continue;   // behind the planet
+    if (occlHidesMoon(m, q)) continue;
     hits.push({ b: m, x: q[0], y: q[1] });
     if (state.sel === m || state.hover === m) {
       ctx.strokeStyle = hexA(m.col, state.sel === m ? .85 : .45); ctx.lineWidth = 1;
@@ -2515,10 +2526,30 @@ function frame(now) {
     if (ms) items.push({ b: state.sel, p: mp, s: ms, z: ms[2] });
     items.sort((m, n) => n.z - m.z);
   }
+  // When a globe is on screen, anything projecting inside its disc that is
+  // genuinely farther away is behind it. Depth cannot decide this: the radial
+  // compression squashes a moon's distance from its planet to near nothing, so
+  // the two come out the same to within rounding. True kilometres can.
+  let occl = null;
+  if (state.sel && radiusOf(state.sel.key) && CAM.zoom >= APPROACH_ZOOM) {
+    const gb = state.sel, gp = helioOf(gb, state.t), gs = projAU(gp.x, gp.y, gp.z);
+    const gR = globeRadius(gb);
+    if (gs && gR) occl = { b: gb, s: gs, R: gR, p: gp,
+                           camKm: globeDist * radiusOf(gb.key) };
+  }
+  occlRef = occl;
+  const hidden = it => {
+    if (!occl || it.b === occl.b || it.sun) return false;
+    if (Math.hypot(it.s[0] - occl.s[0], it.s[1] - occl.s[1]) > occl.R) return false;
+    const q = it.p;
+    const km = Math.hypot(q.x - occl.p.x, q.y - occl.p.y, q.z - occl.p.z) * AU_KM;
+    return km > occl.camKm;                    // beyond the camera, so behind the globe
+  };
   const labels = [];
   approachInfo = null;
   for (const it of items) {
     if (it.sun) { drawSun(); continue; }
+    if (hidden(it)) continue;
     drawDrop(it.b, it.p, it.s);
     const gR = globeRadius(it.b);
     if (gR) {
