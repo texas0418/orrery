@@ -1514,8 +1514,14 @@ function flyTo(b, ms = 900, zoomOverride) {
   if (b) {
     const p = helioOf(b, state.t);
     to = toScene(p.x, p.y, p.z);
-    const R = Math.max(sceneR(0.45), Math.hypot(...to));
-    zTo = Math.max(1, Math.min(14, SCENE_MAX() / (R * 1.15)));
+    if (b.moon) {
+      // A moon's distance from the Sun says nothing about how to frame it.
+      // Going to a moon means going TO it, close enough to be a world.
+      zTo = 26;
+    } else {
+      const R = Math.max(sceneR(0.45), Math.hypot(...to));
+      zTo = Math.max(1, Math.min(14, SCENE_MAX() / (R * 1.15)));
+    }
     if (zoomOverride) zTo = zoomOverride;
   }
   CAM.fly = { t0: performance.now(), ms, from: [CAM.tx, CAM.ty, CAM.tz], to,
@@ -1708,7 +1714,7 @@ function setupSky() {
               d[0] * right[1] - d[1] * right[0]];
   SKY.basis = { d, right, up };
   SKY.cx = VIEW.cx; SKY.cy = VIEW.cy;
-  SKY.R = Math.min(W / 2 - 8, VIEW.fit + 40);
+  SKY.R = Math.max(10, Math.min(W / 2 - 8, VIEW.fit + 40));   // never negative, even at zero width
   SKY.scale = SKY.R / (2 * Math.tan(state.view.fov / 2 * D2R));
 }
 // horizon vector -> screen, or null if it falls behind the observer
@@ -2480,6 +2486,12 @@ function frame(now) {
   }
   if (!needsDraw) { requestAnimationFrame(frame); return; }
   needsDraw = false;
+  try { drawFrame(); } catch (err) {                 // never let one body stop the clock
+    if (!frame.warned) { frame.warned = true; console.error('draw failed:', err); }
+  }
+  requestAnimationFrame(frame);
+}
+function drawFrame() {
   ctx.clearRect(0, 0, W, H);
   if (state.mode === 'sky') {
     drawSky();
@@ -2487,7 +2499,6 @@ function frame(now) {
     if (state.sel) updateDetail();
     updateTonight();
     announce();
-    requestAnimationFrame(frame);
     return;
   }
   setupCam();
@@ -2510,7 +2521,7 @@ function frame(now) {
   items.sort((m, n) => n.z - m.z);              // painter's order, far first
 
   if (state.sel && !state.sel.home && !state.sel.sky) {   // sight line Earth → body
-    const e = positionAt(EARTH, T), q = positionAt(state.sel, T);
+    const e = positionAt(EARTH, T), q = helioOf(state.sel, state.t);
     const a = projAU(e.x, e.y, e.z), c = projAU(q.x, q.y, q.z);
     if (a && c) {
       ctx.strokeStyle = 'rgba(255,255,255,.16)'; ctx.lineWidth = 1;
@@ -2534,8 +2545,11 @@ function frame(now) {
   if (state.sel && radiusOf(state.sel.key) && CAM.zoom >= APPROACH_ZOOM) {
     const gb = state.sel, gp = helioOf(gb, state.t), gs = projAU(gp.x, gp.y, gp.z);
     const gR = globeRadius(gb);
-    if (gs && gR) occl = { b: gb, s: gs, R: gR, p: gp,
-                           camKm: globeDist * radiusOf(gb.key) };
+    if (gs && gR) {
+      // distance to the body in its own radii, from the angular size being drawn
+      const D = 1 / Math.max(1e-9, gR / Math.hypot(CV.f, gR));
+      occl = { b: gb, s: gs, R: gR, p: gp, camKm: D * radiusOf(gb.key) };
+    }
   }
   occlRef = occl;
   const hidden = it => {
@@ -2568,7 +2582,6 @@ function frame(now) {
     (n.b === state.sel) - (m.b === state.sel) || n.b.r - m.b.r));
   if (state.sel) updateDetail();
   announce();
-  requestAnimationFrame(frame);
 }
 const hits = [];
 
