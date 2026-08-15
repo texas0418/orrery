@@ -1,17 +1,15 @@
 # Orrery — handoff, 2026-08-15
 
 **Live:** https://orrery.simonbuilds.app · **Repo:** github.com/texas0418/orrery
-**Deployed build: 189,543 bytes.** Live, disk and the `/orrery` redirect all agree.
+**Deployed build: 196,563 bytes.** Live, disk and the `/orrery` redirect all agree.
 
 ---
 
 ## 1. State of play
 
-The site is fully working and deployed. There is **one uncommitted change in the
-working tree** (190,988 bytes) that is a partial improvement with a known flaw —
-see §3. It compiles and runs; it is simply not finished, and is **not deployed**.
-
-**Do not deploy the working tree until §3 is resolved.** Live is correct.
+The site is fully working and deployed. The camera problem in §3 is **fixed and
+shipped**: `CAM.alt` is now a first-class camera property and every moon system
+frames on screen. Nothing is pending in the tree.
 
 ### Deploy procedure (every time)
 ```
@@ -54,48 +52,55 @@ the live factor (`×16.7 thousand actual size`).
 
 ---
 
-## 3. THE OPEN PROBLEM — start here
+## 3. THE CAMERA — solved 2026-08-15, read before touching it
 
 **Symptom (Simon's report):** "There's no orbit for the moon? There is for the
-other moons."
+other moons." The orbit *was* drawn — 2,973 px off screen. The Moon orbits at
+**59.5 Earth-radii**, Io at **6 Jupiter-radii**, and `CAM.zoom` was controlling
+both how much of the compressed solar system was in frame *and* the implied
+altitude above the body, via `globeRadius()`. One number cannot do both.
 
-**Diagnosis (confirmed by measurement, not guesswork):** the orbit *is* drawn,
-2,973 px off screen. The Moon orbits at **59.5 Earth-radii**; Io orbits at **6
-Jupiter-radii**. At one approach zoom, Jupiter's system fits and Earth's cannot.
+**The fix: `CAM.alt` is now a first-class camera property** — altitude above the
+selected body, in that body's own radii, 0 when you are not at one.
 
-**Root cause:** `CAM.zoom` controls two different things at once — how much of the
-(radially compressed) solar system is in frame, *and* the implied altitude above
-the body being approached, via `globeRadius()`. Framing Earth's Moon needs a low
-altitude-equivalent but a high scene zoom. One number cannot do both.
+- `inApproach()` is `CAM.alt > 1.001`, and is the only test for "at a body".
+  `CAM.zoom` no longer decides it.
+- `globeRadius()` is `camF() / sqrt(alt² - 1)` — the drawn radius *is* the
+  altitude, and `drawCompanions` / `drawMoonOrbits` invert it to recover the
+  camera distance. Change one and the other follows for free.
+- `frameAlt(b)` is where you arrive: `altFor(systemRadii(b), .62)` for a planet
+  with moons — far enough to hold the widest orbit, sampled over a whole
+  revolution — or `approachAlt(b)` otherwise. `approachAlt` is 2.61 radii, except
+  for Saturn, where the ring outer edge sets it (6.6) or the rings would be cut
+  off. `altFor(radii, frac)` = `radii / (frac · tan(HALF_FOV))`.
+- Scene zoom during approach is a constant, `APPROACH_SCENE = 60`: enough that
+  nothing else is in the cone. It is no longer load-bearing.
+- Wheel/pinch scale `alt` when in approach and `zoom` otherwise. Crossing
+  `APPROACH_ZOOM` (4) with a body selected hands over to `alt` and eases zoom in;
+  passing `exitAlt()` hands back. Entry and exit are 500 ms flights, and exit
+  drops zoom to `APPROACH_ZOOM` first so a scroll that carries on through the
+  handover carries on out instead of stranding the camera at 60× over nothing.
+- `alt` rides in the hash as `h=`. A link from before the split (zoom ≥ 4, no
+  `h=`) is converted on read — it meant "at this body", so it lands there.
 
-**Uncommitted attempt (in the tree now):** `APPROACH_ZOOM` 4→2, globe radius floor
-7→1.5 keyed to zoom/4, `flyTo` frames a planet by its outermost moon, and moon
-orbit paths now use the same perspective projection as `drawCompanions`. Every
-moon system now measurably fits on screen. **But** flying to Earth lands at zoom
-2.7, where the scene still shows the whole solar system, so the Earth–Moon pair is
-a small detail in a busy field. Better arithmetic, worse picture.
+**Consequences worth knowing before you "improve" any of them:**
 
-**The fix I was halfway through:** add `CAM.alt` — altitude above the selected
-body, in its own radii — as a first-class camera property, separate from
-`CAM.zoom`.
+- **Fly to** now frames a planet's whole system; **Approach** goes inside it to
+  the planet. Two different views, and the About says so.
+- Framing Earth's system means Earth is **2.5 px** across. That is not a bug —
+  the Moon's orbit is 59.5 radii out, and you cannot have both. Saturn framed by
+  Iapetus is the same.
+- Below 4 px a globe is drawn in the body's own colour and **its map is never
+  fetched** — a megabyte to colour nine pixels. Zoom in and it loads.
+- `drawMoons` is now `drawMoonOrbits` and draws *only* paths. The moons
+  themselves were always also drawn by `drawCompanions`, in a different
+  projection — two labels, and a moon that could sit off its own orbit line.
 
-- `CAM = {..., alt: 0}`; `alt > 1.001` means "in approach".
-- `globeRadius()` returns `CV.f / sqrt(alt² - 1)` when `alt` is set, else current.
-- `flyTo` animates `alt` alongside zoom. Moon → `zoom 60, alt 3`. Planet with
-  moons → `zoom 60, alt = outermostMoonRadii × 2.4`. Planet without → `zoom 60,
-  alt 8`. Approach button → `alt 2.6`.
-- Wheel/pinch scales `alt` when in approach (flying in and out), and only touches
-  `zoom` otherwise. `alt > 20000` exits approach: `alt = 0, zoom = 1`.
-- Everything currently testing `CAM.zoom >= APPROACH_ZOOM` becomes
-  `(CAM.alt > 1.001 || CAM.zoom >= APPROACH_ZOOM)` — there are four such sites.
-- Carry `alt` in the URL hash as `h=`.
-
-The edit script failed on the wheel-handler anchor only; the other replacements
-were all correct. Nothing was written, so the tree is clean of it.
-
-**Verify with:** fly to each of earth/mars/jupiter/saturn/uranus/neptune/pluto and
-assert the outermost moon lands within `min(W,H)/2` px of the planet *and* that no
-unrelated planet is in frame.
+**Verified:** all 33 bodies flown to, at 1280×720 and 375×812; every outermost
+moon lands ~166 px out against a `min(W,H)/2` limit; no unrelated planet in
+frame except Pallas from Vesta, which really is in that direction. Entry, exit,
+sky round-trip, deselect, old-style links, and the 33-body sweep are in the
+session log; there are no tests in the repo to run (see §5.3).
 
 ---
 
@@ -128,13 +133,22 @@ unrelated planet is in frame.
   `file://`, or every map silently fails to load.
 - **Headless Chrome captures smooth scrolls and image loads mid-flight.** Verify
   interaction in a real browser; headless is for stills only.
+- **A hidden preview pane stops `requestAnimationFrame` and reports the canvas as
+  0×0.** Every flight freezes and `VIEW.fit` falls to its floor, which looks
+  exactly like a camera bug. Screenshot to bring the pane back, or drive
+  `stepFly(CAM.fly.t0 + CAM.fly.ms + 1)` by hand when scripting checks.
+- **Approach and the scene are different spaces, and no zoom joins them.** Radial
+  compression means that at Earth's system-framing altitude the scene camera
+  would have to sit at zoom ~1,150 to show the same field, and for the two to
+  match at zoom 1 you would be 250,000 Earth-radii out. Do not try to make the
+  handover continuous. Animate it and let it be a change of place.
 
 ### Accuracy, measured against JPL Horizons
 | | |
 |---|---|
 | Planets | sub-arcminute; oppositions match published dates |
 | Asteroids | worst 0.72° across 1800–2050 |
-| Moons | 14 of 19 under 1°, 12 under 0.3°; worst Triton 4.9°, Miranda 4.6° |
+| Moons | 14 of the 19 fitted under 1°, 12 under 0.3°; worst Triton 4.9°, Miranda 4.6°. Our own Moon is the 20th and comes from Schlyter, not a fit |
 | Sunrise/sunset | within 1 minute of published NYC times |
 | Sub-solar point | 0.0001° at solstices |
 
@@ -142,7 +156,12 @@ unrelated planet is in frame.
 
 ## 5. Backlog, roughly in order
 
-1. **Finish §3.** Nothing else should ship first.
+1. **Mobile portrait is cramped.** `computeView()` now counts the detail card as
+   top chrome on narrow screens, so the view is at last centred on the band you
+   can actually see rather than behind the card — but with the card open that
+   band is only ~100 px tall and `VIEW.fit` has a floor of 70, so a framed moon
+   system still overspills it. The fix is a layout one (a collapsible card), not
+   a camera one. Desktop is unaffected.
 2. Triton (4.9°) and Miranda (4.6°) still exceed the rest. Both need a proper
    perturbation model, not a better fit — a different kind of project. Currently
    disclosed in the About.

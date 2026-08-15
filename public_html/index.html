@@ -462,15 +462,15 @@ button.t.on{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,161
     <p> Pluto and the four asteroids can be visited too, but there are no maps for them here — so they arrive as shape and sunlight only. The lit fraction is real and the size factor is real; the face is not, and the panel says so rather than inventing a surface.</p>
     <p>In <em>Sky</em>, the Moon is the exception that needs no exaggeration at all: it subtends half a degree, so narrow the field below about twelve degrees and it is simply drawn at the size it is, phase and all.</p>
 
-    <h3 data-toc="Moons">Nineteen moons</h3>
-    <p>Approach a planet and its moons come with it, drawn to the same exaggeration as the planet so the system is internally to scale even though the whole thing is enlarged. Jupiter with the Galileans wheeling round it is the view Galileo had in 1610, and the one that ended the geocentric universe.</p>
-    <p>Click one, or pick it from the list beneath its planet, and you can go to it the same way you go to a planet — the camera flies over and drops into low orbit. Its planet and its sibling moons come with it, placed by a perspective camera at the true altitude and sized by true angular radius. <strong>Stand off Europa and Jupiter is 11.9° wide</strong> — twenty-three full Moons — filling a quarter of the view, with Europa a small disc in front of it. That is not a flourish; it is what the geometry gives when you stop compressing it.</p>
+    <h3 data-toc="Moons">Twenty moons</h3>
+    <p><em>Fly to</em> a planet and you get the whole system: the camera stops far enough out to hold the widest orbit that planet has, and the moons are drawn to the same exaggeration as the planet, so the system is internally to scale even though the whole thing is enlarged. Jupiter with the Galileans wheeling round it is the view Galileo had in 1610, and the one that ended the geocentric universe. <em>Approach</em> goes inside that, down to the planet itself, which is why the moons leave the frame on the way in. No single distance can serve both: our Moon orbits at 59.5 Earth-radii and Io at 6 of Jupiter's, so the altitude that frames one puts the other clean off the screen.</p>
+    <p>Click one, or pick it from the list beneath its planet, and you can go to it the same way you go to a planet — the camera flies over and drops into low orbit. Its planet and its sibling moons come with it, placed by a perspective camera at the true altitude and sized by true angular radius. <strong>Stand off Europa and Jupiter is 11.9° wide</strong> — twenty-three full Moons — filling a quarter of the view. Turn the camera round to it and there it is. That is not a flourish; it is what the geometry gives when you stop compressing it.</p>
     <p><strong>Fourteen of them are mapped</strong>, from spacecraft: Voyager and Galileo for Io, Europa, Ganymede and Callisto; Cassini for Titan, Enceladus, Tethys, Dione, Rhea and Iapetus; Voyager 2 for Triton; New Horizons for Charon; Viking for Phobos; and our own Moon. Their orientation needs no rotation table, because a synchronous satellite keeps one face to its planet — which is also the IAU convention for these bodies, longitude zero pointing at the primary. So the hemisphere turned towards you is the one that really is, and it is the same hemisphere anyone has ever charted.</p>
     <p>Several of those maps are <strong>monochrome</strong>, because the controlled mosaics they come from are. Io is famously sulphur-yellow and arrives here in grey. I would rather hand you the real basemap without its colour than tint it to look like the photograph you were expecting. Iapetus loses nothing at all: its dark and bright hemispheres are a brightness difference, and that is exactly what a monochrome mosaic records.</p>
     <p>Coverage is honest too. Triton was photographed by one spacecraft on one pass, so its map covers the hemisphere Voyager 2 saw and no more. <strong>Five moons have no map, for a reason worth knowing.</strong> Voyager 2 passed Uranus once, in 1986, with the planet's pole aimed almost at the Sun — so only the southern hemispheres of Miranda, Ariel, Umbriel, Titania and Oberon have ever been photographed at all. There is no global mosaic to have. Those five and Deimos arrive as shape and sunlight only: the size factor and the lit fraction are real, the face is not.</p>
     <p>They are in the sky as well. Narrow the field below about a degree and Io, Europa, Ganymede and Callisto string out along the ecliptic beside Jupiter, arranged as they actually are that night — which is a real observing aid, because they are a binocular target and the pattern changes every few hours.</p>
     <p>Getting them right took two goes. JPL publishes mean elements for satellites, referenced to each planet's Laplace plane, and they looked ideal. They are not: their orbital <em>phases</em> are out by as much as 178°, which would have put Io on the wrong side of Jupiter — the most convincing kind of wrong. So instead each moon was sampled from JPL Horizons every 150 to 731 days across 1800–2050 and its elements fitted to that, exactly as the asteroids were. A moon keeps to its planet's equatorial plane and a planet's pole barely moves, so the inclination and node in ecliptic coordinates stay nearly constant and a straight line through them holds.</p>
-    <p>Every one is checked against Horizons at four dates spread across the whole window. Fourteen of the nineteen land within a degree and twelve within a third of one; Charon, Titan, Dione and Io are inside a twentieth. The stubborn ones are Triton at 4.9° and Miranda at 4.6°, then Tethys, Phobos and Deimos between 1.8 and 2.3.</p>
+    <p>Every fitted one is checked against Horizons at four dates spread across the whole window — nineteen of the twenty, our own Moon being the exception, since it comes from a lunar theory rather than a fit. Fourteen of the nineteen land within a degree and twelve within a third of one; Charon, Titan, Dione and Io are inside a twentieth. The stubborn ones are Triton at 4.9° and Miranda at 4.6°, then Tethys, Phobos and Deimos between 1.8 and 2.3.</p>
     <p>Phobos was the interesting one. It went round Mars three times a day and a straight line in longitude put it 12° out — because Phobos is <em>spiralling in</em>. Tides are dragging it down about two centimetres a year and its orbital period is measurably shortening, so its mean motion is accelerating and no constant rate can describe it. Giving the longitude a quadratic term brought it to 2.2°. That is a real physical effect showing up as a curve in a fit, which is the sort of thing that makes a number worth chasing.</p>
     <p><strong>Mimas is missing.</strong> It is locked in a two-to-one resonance with Tethys and librates, and no fixed ellipse can follow that: the fit put it 111° along its orbit from where it belongs, so it is not here at all. Same reasoning as Hygiea in the belt.</p>
 
@@ -825,7 +825,11 @@ function computeView() {
   const narrow = W < 860;
   const rect = el => el.getBoundingClientRect();
   const chromeTop = Math.min(rect($('bar')).top, narrow ? rect($('list')).top : Infinity);
-  const top = narrow ? 58 : 0;
+  // On a phone the detail card is a block across the top, not a sidebar, so it
+  // takes vertical space too — without this the middle of the view sits behind
+  // it and a moon system is framed where it cannot be seen.
+  const card = narrow && detailEl.classList.contains('show') ? rect(detailEl).bottom + 12 : 0;
+  const top = narrow ? Math.max(58, card) : 0;
   const bot = Math.max(0, H - chromeTop) + 12;
   const usable = Math.max(160, H - top - bot);
   VIEW.cx = W / 2;
@@ -859,8 +863,20 @@ window.addEventListener('resize', resize);
    distance from the Sun but never its direction, so every inclination on
    screen is the true one at any Spread setting.
    ========================================================================== */
-const CAM = { az: -62, el: 58, zoom: 1, tx: 0, ty: 0, tz: 0, fly: null };
+// The camera has two independent controls, and it needs both. `zoom` frames the
+// compressed solar system. `alt` is the altitude above the body you have gone
+// to, measured in that body's own radii, and is 0 when you are not at one. One
+// number could never do the work of both: our Moon orbits at 59.5 Earth-radii
+// and Io at 6 Jupiter-radii, so the framing that holds the Galileans puts the
+// Moon three thousand pixels off the screen.
+const CAM = { az: -62, el: 58, zoom: 1, alt: 0, tx: 0, ty: 0, tz: 0, fly: null };
 const HALF_FOV = 24 * D2R;
+// focal length in pixels — the same value setupCam gives CV.f, available before
+// the first frame and to code that runs outside the draw
+const camF = () => VIEW.fit / Math.tan(HALF_FOV);
+// The altitude, in body radii, that puts something `radii` out at `frac` of the
+// half-frame: a point that far off the axis lands at f·radii/alt pixels.
+const altFor = (radii, frac) => Math.max(1.05, radii / (frac * Math.tan(HALF_FOV)));
 
 const sceneR = au => Math.pow(au, state.pow);
 const SCENE_MAX = () => sceneR(33);
@@ -1087,7 +1103,11 @@ function drawLabels(placed) {
                   [x - gap - w, y - 13], [x - gap - w, y + 13],
                   [x + gap, y - 26], [x + gap, y + 26], [x - gap - w, y - 26], [x - gap - w, y + 26],
                   [x - w / 2, y - 20], [x - w / 2, y + 20]];
-    for (const o of opts) if (fits(o[0], o[1] - 5.5, w)) { px = o[0]; py = o[1]; break; }
+    let room = false;
+    for (const o of opts) if (fits(o[0], o[1] - 5.5, w)) { px = o[0]; py = o[1]; room = true; break; }
+    // Nowhere to put it: leave it off rather than stack it on top of another.
+    // The body is still there to hover, and hovering brings its name back.
+    if (!room && state.sel !== b && state.hover !== b) continue;
     boxes.push({ x: px, y: py - 5.5, w });
     ctx.textAlign = align;
     ctx.fillStyle = state.sel === b ? '#fff'
@@ -1326,10 +1346,17 @@ const globeCtx = globeCv.getContext('2d');
 // closing right in gives the view from low orbit: the limb curves away and you
 // see less than a hemisphere, as you would.
 function drawGlobe(b, sx, sy, Rcss, depth, opt) {
-  const mapped = b.moon ? MOON_MAPS.has(b.key) : !!ROT[b.key];
+  // Framing a whole moon system can leave the planet a few pixels across, and a
+  // surface map is a megabyte to decide the colour of nine pixels. Under four,
+  // it is drawn in the body's own colour and the map is never asked for — the
+  // same size at which a companion stops being worth a globe at all.
+  const hasMap = b.moon ? MOON_MAPS.has(b.key) : !!ROT[b.key];
+  const mapped = hasMap && Rcss >= 4;
   const tex = mapped ? requestTex(b.key) : { state: 'unmapped' };
   const xf = (opt && opt.xf) || (v => v);
-  const F0 = !mapped ? { x: [1,0,0], y: [0,1,0], z: [0,0,1] }
+  // from the body's own pole and prime meridian, not from whether we happen to
+  // be drawing the map — Saturn's rings lie in its equator at any size
+  const F0 = !hasMap ? { x: [1,0,0], y: [0,1,0], z: [0,0,1] }
            : b.moon ? moonFrame(b, state.t)
                     : bodyFrame(b.key, state.t);
   const F = { x: xf(F0.x), y: xf(F0.y), z: xf(F0.z) };
@@ -1398,21 +1425,9 @@ function drawGlobe(b, sx, sy, Rcss, depth, opt) {
 }
 let globeDist = 1e9;      // implied camera distance in body radii, set by drawGlobe
 
-// A moon's offset is drawn at the same exaggeration as its planet, so the
-// system is internally to scale even though the whole thing is enlarged.
-let occlRef = null;
-function occlHidesMoon(m, q) {
-  const o = occlRef;
-  if (!o || o.b === m) return false;
-  if (Math.hypot(q[0] - o.s[0], q[1] - o.s[1]) > o.R) return false;
-  const p = moonHelio(m, state.t);
-  const km = Math.hypot(p.x - o.p.x, p.y - o.p.y, p.z - o.p.z) * AU_KM;
-  return km > o.camKm;
-}
 // Everything near the body you have flown to, drawn at TRUE relative offsets
-// and TRUE relative sizes using that body's own pixels-per-kilometre. So from
-// Europa, Jupiter is a globe 23 full-Moons wide, because that is what it is.
-// Everything near the body you have flown to, projected through a real
+// and TRUE relative sizes. So from Europa, Jupiter is a globe 23 full-Moons
+// wide, because that is what it is. Projected through a real
 // perspective camera placed at the implied true altitude. A linear
 // pixels-per-kilometre scale is only valid within a radius or two of the
 // anchor; Jupiter is 433 Europa-radii away and needs the real thing.
@@ -1457,67 +1472,39 @@ function drawCompanions(anchor, s, Rg, front) {
       ctx.beginPath(); ctx.arc(it.x, it.y, Math.max(it.r, 2) + 7, 0, TAU); ctx.stroke();
     }
     hits.push({ b: it.b, x: it.x, y: it.y });
-    ctx.font = '600 10px Outfit, system-ui, sans-serif';
-    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-    ctx.fillStyle = 'rgba(255,255,255,.62)';
-    ctx.fillText(it.b.name.toUpperCase(), it.x + Math.max(it.r, 3) + 7, it.y);
+    // through the same placer the planets use: framing a system by its outermost
+    // moon can stack five inner ones within thirty pixels of each other
+    labels.push({ b: it.b, x: it.x, y: it.y, r: Math.max(it.r, 3) });
   }
 }
-function drawMoons(b, s, Rg, pp) {
-  const ms = moonsOf(b.key);
-  if (!ms.length) return;
-  const Rk = radiusOf(b.key);
-  const put = (rel) => {
-    const k = AU_KM / Rk * Rg;
-    return [ s[0] + (rel.x*CV.right[0] + rel.y*CV.right[1] + rel.z*CV.right[2]) * k,
-             s[1] - (rel.x*CV.up[0]    + rel.y*CV.up[1]    + rel.z*CV.up[2])    * k,
-                    (rel.x*CV.fwd[0]   + rel.y*CV.fwd[1]   + rel.z*CV.fwd[2])   * k ];
-  };
-  // project through the same camera the companions use, so an orbit sixty
-  // planet-radii wide lands where it belongs instead of off in the margins
+// Just the paths. The moons themselves are bodies like any other and are drawn
+// by drawCompanions, through the perspective camera — so the path is drawn
+// through that same camera, or a moon would sit off its own line whenever its
+// orbit carried it towards us. A linear pixels-per-kilometre scale has no
+// depth and cannot do this.
+function drawMoonOrbits(b, s, Rg) {
+  const ms = moonsOf(b.key), Rk = radiusOf(b.key);
+  if (!ms.length || !Rk) return;
   const f = CV.f;
-  const D = 1 / Math.max(1e-9, Rg / Math.hypot(f, Rg));
-  const camDist = D * Rk;
-  const persp = rel => {
-    const rx = rel.x * AU_KM, ry = rel.y * AU_KM, rz = rel.z * AU_KM;
-    const vx = rx + CV.fwd[0]*camDist, vy = ry + CV.fwd[1]*camDist, vz = rz + CV.fwd[2]*camDist;
-    const z = vx*CV.fwd[0] + vy*CV.fwd[1] + vz*CV.fwd[2];
-    if (z <= 1) return null;
-    return [ s[0] + f * (vx*CV.right[0] + vy*CV.right[1] + vz*CV.right[2]) / z,
-             s[1] - f * (vx*CV.up[0]    + vy*CV.up[1]    + vz*CV.up[2])    / z ];
-  };
+  const camDist = Rk / Math.max(1e-9, Rg / Math.hypot(f, Rg));   // km from the centre
   for (const m of ms) {
     ctx.strokeStyle = hexA(m.col, .18); ctx.lineWidth = 1;
     ctx.beginPath();
     const P = Math.abs(360 / (m.L[1] / 36525));       // days per orbit
     let pen = false;
     for (let i = 0; i <= 96; i++) {
-      const q = persp(moonRel(m, state.t + (i / 96) * P * DAY));
-      if (!q) { pen = false; continue; }
-      pen ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]);
+      const rel = moonRel(m, state.t + (i / 96) * P * DAY);
+      const vx = rel.x * AU_KM + CV.fwd[0]*camDist,
+            vy = rel.y * AU_KM + CV.fwd[1]*camDist,
+            vz = rel.z * AU_KM + CV.fwd[2]*camDist;
+      const z = vx*CV.fwd[0] + vy*CV.fwd[1] + vz*CV.fwd[2];
+      if (z <= 1) { pen = false; continue; }                      // behind the camera
+      const x = s[0] + f * (vx*CV.right[0] + vy*CV.right[1] + vz*CV.right[2]) / z,
+            y = s[1] - f * (vx*CV.up[0]    + vy*CV.up[1]    + vz*CV.up[2])    / z;
+      pen ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
       pen = true;
     }
     ctx.stroke();
-  }
-  const drawn = ms.map(m => ({ m, q: put(moonRel(m, state.t)) }))
-                  .sort((a, c) => c.q[2] - a.q[2]);
-  for (const { m, q } of drawn) {
-    const r = Math.max(1.6, Math.min(Rg * 0.9, m.km / Rk * Rg));
-    if (q[2] > 0 && Math.hypot(q[0]-s[0], q[1]-s[1]) < Rg) continue;   // behind the planet
-    if (occlHidesMoon(m, q)) continue;
-    hits.push({ b: m, x: q[0], y: q[1] });
-    if (state.sel === m || state.hover === m) {
-      ctx.strokeStyle = hexA(m.col, state.sel === m ? .85 : .45); ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.arc(q[0], q[1], r + 7, 0, TAU); ctx.stroke();
-    }
-    ctx.fillStyle = m.col;
-    ctx.beginPath(); ctx.arc(q[0], q[1], r, 0, TAU); ctx.fill();
-    if (Rg > 26) {
-      ctx.font = '500 9px Outfit, system-ui, sans-serif';
-      ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-      ctx.fillStyle = hexA(m.col, .75);
-      ctx.fillText(m.name, q[0] + r + 4, q[1]);
-    }
   }
 }
 
@@ -1568,50 +1555,97 @@ function drawRings(b, F, sx, sy, Rcss, sun, front, basis) {
 }
 
 let approachInfo = null;
-const APPROACH_ZOOM = 2;
-// Only the body you have actually travelled to, and only once it would be
-// large enough to be worth drawing as a world.
+// The zoom at which scrolling in on a selected body hands over to `alt`, and
+// the scene zoom held while you are there: close enough that the rest of the
+// solar system is out of the cone and the body has the frame to itself.
+const APPROACH_ZOOM = 4;
+const APPROACH_SCENE = 60;
+const inApproach = () => CAM.alt > 1.001;
+
+// How far a body's moon system reaches, in the body's own radii, over a whole
+// revolution of each moon — it is the orbit path that has to fit on screen,
+// not just wherever the moon happens to be tonight.
+function systemRadii(b) {
+  const Rk = radiusOf(b.key);
+  let far = 0;
+  for (const m of moonsOf(b.key)) {
+    const P = Math.abs(360 / (m.L[1] / 36525)) * DAY;
+    for (let i = 0; i < 16; i++) {
+      const r = moonRel(m, state.t + (i / 16) * P);
+      far = Math.max(far, Math.hypot(r.x, r.y, r.z) * AU_KM / Rk);
+    }
+  }
+  return far;
+}
+// Close enough to be a world. Saturn is the exception: stopping where the globe
+// looks right would cut its rings off at the frame edge, so it stops further out.
+function approachAlt(b) {
+  const ring = b.ring ? RING_BANDS[RING_BANDS.length - 1][1] * 1000 / ROT[b.key].km : 0;
+  return Math.max(altFor(1, .86), ring ? altFor(ring, .8) : 0);
+}
+// Where flying to a body puts you: far enough out to hold everything that goes
+// round it, and never further out than the body itself needs.
+function frameAlt(b) {
+  if (b.moon || !moonsOf(b.key).length) return approachAlt(b);
+  return Math.max(approachAlt(b), altFor(systemRadii(b), .62));
+}
+// Pulled back until the globe is under a pixel wide: there is no world left to
+// look at, so hand the frame back to the solar system. Never before three times
+// the altitude you arrived at, though — in a short window camF() alone is small
+// enough that the first scroll out would eject you.
+const exitAlt = () => Math.max(camF() / 0.8,
+  approachable(state.sel) ? 3 * frameAlt(state.sel) : 0);
+
+// Only the body you have actually travelled to, and only while you are there.
+// The drawn radius IS the altitude: a sphere of unit radius seen from `alt`
+// subtends asin(1/alt), and f·tan of that is f/sqrt(alt²-1).
 function globeRadius(b) {
   if (state.mode !== 'orrery' || state.sel !== b || !radiusOf(b.key)) return 0;
-  if (CAM.zoom < APPROACH_ZOOM) return 0;
-  // keyed to zoom 4 = 7px so existing links frame identically; below that the
-  // globe may get small, which is what lets a wide moon system fit on screen
-  const grow = Math.pow(CAM.zoom / 4, 1.05);
-  return Math.max(1.5, Math.min(Math.min(W, H) * 18, 7 * grow));
+  if (!inApproach()) return 0;
+  return Math.max(1.5, Math.min(Math.min(W, H) * 18,
+                                camF() / Math.sqrt(CAM.alt * CAM.alt - 1)));
 }
 
 /* ---------- camera moves ---------- */
-function flyTo(b, ms = 900, zoomOverride) {
+function flyTo(b, ms = 900, zoomOverride, altOverride) {
   if (reduceMotion.matches) ms = 1;          // asked not to animate: arrive instead
-  const T = century(state.t);
-  let to = [0, 0, 0], zTo = 1;
+  let to = [0, 0, 0], zTo = 1, aTo = 0;
   if (b) {
     const p = helioOf(b, state.t);
     to = toScene(p.x, p.y, p.z);
-    if (b.moon) {
-      // A moon's distance from the Sun says nothing about how to frame it.
-      // Going to a moon means going TO it, close enough to be a world.
-      zTo = 26;
-    } else if (moonsOf(b.key).length && radiusOf(b.key)) {
-      // A planet with moons is framed by its moons. Earth's is 59 Earth-radii
-      // out and Io's is 6, so no single zoom can serve both.
-      let far = 0;
-      for (const m of moonsOf(b.key)) {
-        const r = moonRel(m, state.t);
-        far = Math.max(far, Math.hypot(r.x, r.y, r.z) * AU_KM / radiusOf(b.key));
-      }
-      const want = 0.38 * Math.min(W, H) / Math.max(1, far);
-      zTo = Math.max(APPROACH_ZOOM, Math.min(30, 4 * Math.pow(want / 7, 1 / 1.05)));
+    if (radiusOf(b.key)) {
+      // Going to a body means going TO it. Its distance from the Sun says
+      // nothing about how to frame it; the size of its own system says
+      // everything, and that is what `alt` is for.
+      zTo = APPROACH_SCENE; aTo = frameAlt(b);
     } else {
       const R = Math.max(sceneR(0.45), Math.hypot(...to));
       zTo = Math.max(1, Math.min(14, SCENE_MAX() / (R * 1.15)));
     }
     if (zoomOverride) zTo = zoomOverride;
   }
+  if (altOverride !== undefined) aTo = altOverride;
+  // Arriving at or leaving a body is a change of space, not a distance to
+  // cross: interpolating altitude through zero would sweep the globe over the
+  // whole screen on the way. Only altitude-to-altitude is animated, and then
+  // as a ratio, because that is how altitude reads.
+  if (!aTo || !CAM.alt) CAM.alt = aTo;
   CAM.fly = { t0: performance.now(), ms, from: [CAM.tx, CAM.ty, CAM.tz], to,
-              zFrom: CAM.zoom, zTo };
+              zFrom: CAM.zoom, zTo, aFrom: CAM.alt, aTo };
   needsDraw = true;
 }
+// Arriving eases the scene zoom in behind you while `alt` takes the wheel.
+// Leaving drops it straight back to the zoom you would have arrived at and
+// eases out from there — so a scroll that carries on through the handover
+// carries on out, instead of stranding the camera at 60× over nothing.
+const enterApproach = b => flyTo(b, 500, undefined, frameAlt(b));
+const leaveApproach = () => {
+  CAM.alt = 0; CAM.zoom = APPROACH_ZOOM;
+  flyTo(state.sel && !state.sel.sky && radiusOf(state.sel.key) ? state.sel : null, 500, 1, 0);
+};
+// A flight in progress keeps easing the zoom, but the wheel owns the altitude
+// from the moment it is touched.
+const releaseAlt = () => { if (CAM.fly) CAM.fly.aFrom = CAM.fly.aTo = 0; };
 function stepFly(now) {
   const f = CAM.fly; if (!f) return;
   const u = Math.min(1, (now - f.t0) / f.ms);
@@ -1620,7 +1654,9 @@ function stepFly(now) {
   CAM.ty = f.from[1] + (f.to[1] - f.from[1]) * e;
   CAM.tz = f.from[2] + (f.to[2] - f.from[2]) * e;
   CAM.zoom = f.zFrom + (f.zTo - f.zFrom) * e;
-  if (u >= 1) CAM.fly = null;
+  if (f.aFrom > 1.001 && f.aTo > 1.001) CAM.alt = f.aFrom * Math.pow(f.aTo / f.aFrom, e);
+  // the link has to describe where the flight ended, not where it was passing
+  if (u >= 1) { CAM.fly = null; queueHash(); }
   needsDraw = true;
 }
 
@@ -2368,7 +2404,9 @@ function select(b) {
   needsDraw = true;
   queueHash();
   refreshMoonList();
-  if (!b) return;
+  // Nothing selected means nothing to be at: back out rather than leave the
+  // camera hanging in a tight cone around an empty patch of sky.
+  if (!b) { computeView(); if (inApproach()) leaveApproach(); return; }
   const sky = state.mode === 'sky';
   const rows = b.moon ? MOON_ROWS : sky ? SKY_ROWS : ROWS;
   const skip = k => b.moon ? false : sky
@@ -2385,6 +2423,7 @@ function select(b) {
   cell = {};
   for (const el of detailEl.querySelectorAll('[data-c]')) cell[el.dataset.c] = el;
   updateDetail();
+  computeView();          // the card just changed the band left to draw in
 }
 
 const MOON_ROWS = [
@@ -2561,7 +2600,7 @@ function frame(now) {
   }
   if (CAM.fly) stepFly(now);
   else if (state.mode === 'orrery' && state.sel && !state.sel.sky &&
-           radiusOf(state.sel.key) && CAM.zoom >= APPROACH_ZOOM) {
+           radiusOf(state.sel.key) && inApproach()) {
     const q = helioOf(state.sel, state.t);
     const to = toScene(q.x, q.y, q.z);
     if (Math.hypot(to[0]-CAM.tx, to[1]-CAM.ty, to[2]-CAM.tz) > 1e-9) {
@@ -2626,7 +2665,7 @@ function drawFrame() {
   // compression squashes a moon's distance from its planet to near nothing, so
   // the two come out the same to within rounding. True kilometres can.
   let occl = null;
-  if (state.sel && radiusOf(state.sel.key) && CAM.zoom >= APPROACH_ZOOM) {
+  if (state.sel && radiusOf(state.sel.key) && inApproach()) {
     const gb = state.sel, gp = helioOf(gb, state.t), gs = projAU(gp.x, gp.y, gp.z);
     const gR = globeRadius(gb);
     if (gs && gR) {
@@ -2635,7 +2674,6 @@ function drawFrame() {
       occl = { b: gb, s: gs, R: gR, p: gp, camKm: D * radiusOf(gb.key) };
     }
   }
-  occlRef = occl;
   const companionOf = occl && (occl.b.moon
     ? new Set([occl.b.of, ...moonsOf(occl.b.of).map(m => m.key)])
     : new Set(moonsOf(occl.b.key).map(m => m.key)));
@@ -2648,7 +2686,7 @@ function drawFrame() {
     const km = Math.hypot(q.x - occl.p.x, q.y - occl.p.y, q.z - occl.p.z) * AU_KM;
     return km > occl.camKm;                    // beyond the camera, so behind the globe
   };
-  const labels = [];
+  labels.length = 0;
   approachInfo = null;
   for (const it of items) {
     if (it.sun) { drawSun(); continue; }
@@ -2656,7 +2694,7 @@ function drawFrame() {
     drawDrop(it.b, it.p, it.s);
     const gR = globeRadius(it.b);
     if (gR) {
-      if (!it.b.moon) drawMoons(it.b, it.s, gR, it.p);   // orbit paths for a planet
+      if (!it.b.moon) drawMoonOrbits(it.b, it.s, gR);    // the paths; drawCompanions draws the moons
       drawCompanions(it.b, it.s, gR, false);             // behind the anchor
       const st = drawGlobe(it.b, it.s[0], it.s[1], gR, it.s[2]);
       drawCompanions(it.b, it.s, gR, true);              // in front of it
@@ -2675,6 +2713,7 @@ function drawFrame() {
   announce();
 }
 const hits = [];
+const labels = [];      // filled by the body loop and by drawCompanions, placed once at the end
 
 /* ---------- transport ---------- */
 const scrub = $('scrub');
@@ -2857,11 +2896,11 @@ $('approachBtn').onclick = () => {
   const b = state.sel;
   if (!b || b.sky || !radiusOf(b.key)) { $('approachBtn').textContent = 'Pick a body'; 
     setTimeout(() => $('approachBtn').textContent = 'Approach', 1400); return; }
-  if (ROT[b.key]) requestTex(b.key);
-  flyTo(b, 1400, 26);
+  if (ROT[b.key]) requestTex(b.key);          // start the map on its way during the flight
+  flyTo(b, 1400, undefined, approachAlt(b));
 };
 $('camReset').onclick = () => {
-  CAM.az = -62; CAM.el = 58; CAM.fly = null;
+  CAM.az = -62; CAM.el = 58; CAM.fly = null; CAM.alt = 0;
   state.pan.x = state.pan.y = 0;
   flyTo(null, 600);
   for (const o of document.querySelectorAll('.vw')) o.classList.toggle('on', o.dataset.el === '58');
@@ -2996,6 +3035,7 @@ function writeHash() {
     if (state.track !== 3) p.set('k', state.track);
   } else {
     p.set('c', `${CAM.az.toFixed(0)},${CAM.el.toFixed(0)},${CAM.zoom.toFixed(2)}`);
+    if (inApproach()) p.set('h', CAM.alt.toFixed(2));      // altitude, in body radii
     if (Math.abs(state.pow - .45) > .001) p.set('s', Math.round(state.pow * 100));
   }
   history.replaceState(null, '', '#' + p.toString());
@@ -3012,6 +3052,8 @@ function readHash() {
     for (const el of document.querySelectorAll('.vw'))
       el.classList.toggle('on', Math.abs(+el.dataset.el - CAM.el) < 0.5);
   }
+  const h = parseFloat(p.get('h'));
+  if (isFinite(h) && h > 1.001) CAM.alt = Math.min(1e7, h);
   const s = parseInt(p.get('s'), 10);
   if (isFinite(s) && s >= 25 && s <= 100) { state.pow = s / 100; $('pow').value = s; }
   const o = (p.get('o') || '').split(',').map(parseFloat);
@@ -3032,12 +3074,17 @@ function readHash() {
   if (p.get('m') === 'sky') setMode('sky');
   const b = [...BODIES, ...MOONS, SUN, MOON].find(x => x.key === p.get('b'));
   if (b) select(b);
-  if (b && !b.sky && radiusOf(b.key) && CAM.zoom >= APPROACH_ZOOM) {
-    const q = helioOf(b, state.t);
-    const to = toScene(q.x, q.y, q.z);
-    CAM.tx = to[0]; CAM.ty = to[1]; CAM.tz = to[2];
-    if (ROT[b.key]) requestTex(b.key);
-  }
+  if (approachable(b)) {
+    // A link made before the camera had an altitude encodes an approach as
+    // scene zoom alone. Honour the intent — it meant "at this body" — and
+    // frame it the way this build knows how.
+    if (!inApproach() && CAM.zoom >= APPROACH_ZOOM) { CAM.alt = frameAlt(b); CAM.zoom = APPROACH_SCENE; }
+    if (inApproach()) {
+      const q = helioOf(b, state.t);
+      const to = toScene(q.x, q.y, q.z);
+      CAM.tx = to[0]; CAM.ty = to[1]; CAM.tz = to[2];
+    }
+  } else if (inApproach()) CAM.alt = 0;      // an altitude above nothing in particular
 }
 
 /* ---------- about ---------- */
@@ -3107,7 +3154,12 @@ cv.addEventListener('pointerup', e => {
   if (drag && moved < 6) {
     const r = cv.getBoundingClientRect();
     const b = pick(e.clientX - r.left, e.clientY - r.top);
-    select(b && b === state.sel ? null : b);
+    const nb = b && b === state.sel ? null : b;
+    const was = inApproach();
+    select(nb);
+    // Picking a moon out of the system you are looking at means going to it:
+    // altitude is measured in the body's own radii, so it has to be re-framed.
+    if (was && approachable(nb)) flyTo(nb, 600);
   }
   drag = null;
 });
@@ -3126,12 +3178,24 @@ cv.addEventListener('wheel', e => {
     state.view.fov = Math.max(0.25, Math.min(150, state.view.fov * Math.exp(e.deltaY * .0014)));
     $('fov').value = Math.round(state.view.fov);
     needsDraw = true; queueHash();
+  } else if (inApproach()) {
+    releaseAlt();
+    wheelAlt(CAM.alt * Math.exp(e.deltaY * .0016));   // scrolling in lowers the altitude
+    needsDraw = true; queueHash();
   } else {
     CAM.fly = null;
     CAM.zoom = Math.max(.35, Math.min(2e5, CAM.zoom * Math.exp(-e.deltaY * .0016)));
+    if (CAM.zoom >= APPROACH_ZOOM && approachable(state.sel)) enterApproach(state.sel);
     needsDraw = true; queueHash();
   }
 }, { passive: false });
+// Scrolling in and out of a body, once you are at one. Below the floor you are
+// in low orbit; past the exit altitude there is nothing left to look at.
+const approachable = b => !!b && !b.sky && !!radiusOf(b.key);
+function wheelAlt(a) {
+  if (a > exitAlt()) leaveApproach();
+  else CAM.alt = Math.max(1.02, a);
+}
 // pinch
 cv.addEventListener('touchmove', e => {
   if (e.touches.length !== 2) return;
@@ -3144,9 +3208,14 @@ cv.addEventListener('touchmove', e => {
       state.view.fov = Math.max(0.25, Math.min(150, state.view.fov * (pinch / d)));
       $('fov').value = Math.round(state.view.fov);
       needsDraw = true;
+    } else if (inApproach()) {
+      releaseAlt();
+      wheelAlt(CAM.alt * (pinch / d));         // spreading the fingers goes down
+      needsDraw = true;
     } else {
       CAM.fly = null;
       CAM.zoom = Math.max(.35, Math.min(2e5, CAM.zoom * (d / pinch)));
+      if (CAM.zoom >= APPROACH_ZOOM && approachable(state.sel)) enterApproach(state.sel);
       needsDraw = true;
     }
   }
