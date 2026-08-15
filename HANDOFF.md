@@ -1,7 +1,7 @@
 # Orrery — handoff, 2026-08-15
 
 **Live:** https://orrery.simonbuilds.app · **Repo:** github.com/texas0418/orrery
-**Deployed build: 196,563 bytes.** Live, disk and the `/orrery` redirect all agree.
+**Deployed build: 196,780 bytes.** Live, disk and the `/orrery` redirect all agree.
 
 ---
 
