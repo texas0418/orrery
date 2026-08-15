@@ -1143,6 +1143,114 @@ function subSolar(key, t) {
   return { lat, lon, dir: s };
 }
 
+/* ============================================================================
+   MOONS — mean elements from JPL's satellite tables. Most are referenced to
+   the planet's Laplace plane (a pole given per satellite); the Uranian and
+   Plutonian sets are referenced to the planet's own equator, so those borrow
+   the IAU pole from ROT. Nodes regress and apses advance at the published
+   periods. Epoch 2000-01-01.5 TDB.
+   ========================================================================== */
+const MOONS = [
+  { key:'phobos', name:'Phobos', of:'mars', km:11.1, col:'#8d8378',
+    a:9375, e:0.015, w:216.3, M:189.7, i:1.1, node:169.2,
+    P:0.3187, Pap:1.1, Pnd:2.3, pole:[317.7,52.9], frame:'laplace' },
+  { key:'deimos', name:'Deimos', of:'mars', km:6.2, col:'#8d8378',
+    a:23457, e:0.0, w:0.0, M:205.0, i:1.8, node:54.3,
+    P:1.2625, Pap:0.0, Pnd:56.2, pole:[316.6,53.5], frame:'laplace' },
+  { key:'io', name:'Io', of:'jupiter', km:1821.6, col:'#e0cf7a',
+    a:421800, e:0.004, w:49.1, M:330.9, i:0.0, node:0.0,
+    P:1.762732, Pap:1.333, Pnd:0.0, pole:[268.1,64.5], frame:'laplace' },
+  { key:'europa', name:'Europa', of:'jupiter', km:1560.8, col:'#e8ded0',
+    a:671100, e:0.009, w:45.0, M:345.4, i:0.5, node:184.0,
+    P:3.525463, Pap:1.394, Pnd:30.202, pole:[268.1,64.5], frame:'laplace' },
+  { key:'ganymede', name:'Ganymede', of:'jupiter', km:2634.1, col:'#b9a894',
+    a:1070400, e:0.001, w:198.3, M:324.8, i:0.2, node:58.5,
+    P:7.155588, Pap:68.301, Pnd:137.812, pole:[268.2,64.6], frame:'laplace' },
+  { key:'callisto', name:'Callisto', of:'jupiter', km:2410.3, col:'#8e8074',
+    a:1882700, e:0.007, w:43.8, M:87.4, i:0.3, node:309.1,
+    P:16.69044, Pap:277.921, Pnd:577.264, pole:[268.7,64.8], frame:'laplace' },
+  { key:'mimas', name:'Mimas', of:'saturn', km:198.2, col:'#c8c6c0',
+    a:186000, e:0.02, w:160.4, M:275.3, i:1.6, node:66.2,
+    P:0.942422, Pap:0.493, Pnd:0.986, pole:[40.6,83.5], frame:'laplace' },
+  { key:'enceladus', name:'Enceladus', of:'saturn', km:252.1, col:'#eef2f4',
+    a:238400, e:0.005, w:119.5, M:57.0, i:0.0, node:0.0,
+    P:1.370218, Pap:2.916, Pnd:0.0, pole:[40.6,83.5], frame:'laplace' },
+  { key:'tethys', name:'Tethys', of:'saturn', km:533.0, col:'#d7d5cd',
+    a:295000, e:0.001, w:335.3, M:0.0, i:1.1, node:273.0,
+    P:1.887802, Pap:0.005, Pnd:4.982, pole:[40.6,83.5], frame:'laplace' },
+  { key:'dione', name:'Dione', of:'saturn', km:561.4, col:'#cfcdc6',
+    a:377700, e:0.002, w:116.0, M:212.0, i:0.0, node:0.0,
+    P:2.736916, Pap:11.698, Pnd:0.0, pole:[40.6,83.5], frame:'laplace' },
+  { key:'rhea', name:'Rhea', of:'saturn', km:763.8, col:'#c6c2b8',
+    a:527200, e:0.001, w:44.3, M:31.5, i:0.3, node:133.7,
+    P:4.517503, Pap:33.939, Pnd:35.775, pole:[40.6,83.5], frame:'laplace' },
+  { key:'titan', name:'Titan', of:'saturn', km:2574.7, col:'#d9a441',
+    a:1221900, e:0.029, w:78.3, M:11.7, i:0.3, node:78.6,
+    P:15.945448, Pap:346.68, Pnd:687.37, pole:[36.4,84.0], frame:'laplace' },
+  { key:'iapetus', name:'Iapetus', of:'saturn', km:734.5, col:'#a2917c',
+    a:3561700, e:0.028, w:254.5, M:74.8, i:7.6, node:86.5,
+    P:79.331002, Pap:1662.9, Pnd:3130.302, pole:[288.7,78.9], frame:'laplace' },
+  { key:'miranda', name:'Miranda', of:'uranus', km:235.8, col:'#b9c2c6',
+    a:129846, e:0.001, w:154.8, M:73.0, i:4.4, node:100.9,
+    P:1.413479, Pap:8.939, Pnd:17.787, frame:'equator' },
+  { key:'ariel', name:'Ariel', of:'uranus', km:578.9, col:'#c3ccd0',
+    a:190929, e:0.001, w:9.6, M:193.5, i:0.0, node:0.0,
+    P:2.520379, Pap:28.901, Pnd:0.0, frame:'equator' },
+  { key:'umbriel', name:'Umbriel', of:'uranus', km:584.7, col:'#8d949a',
+    a:265986, e:0.004, w:183.4, M:253.0, i:0.1, node:174.8,
+    P:4.144177, Pap:64.126, Pnd:129.745, frame:'equator' },
+  { key:'titania', name:'Titania', of:'uranus', km:788.4, col:'#c0c6c8',
+    a:436298, e:0.002, w:184.0, M:68.1, i:0.1, node:29.5,
+    P:8.705869, Pap:579.928, Pnd:1644.649, frame:'equator' },
+  { key:'oberon', name:'Oberon', of:'uranus', km:761.4, col:'#a8aeb2',
+    a:583511, e:0.002, w:132.2, M:143.6, i:0.1, node:76.8,
+    P:13.463237, Pap:158.604, Pnd:192.798, frame:'equator' },
+  { key:'triton', name:'Triton', of:'neptune', km:1353.4, col:'#dbe4e6',
+    a:354800, e:0.0, w:0.0, M:63.0, i:157.3, node:178.1,
+    P:5.876994, Pap:0.0, Pnd:340.379, pole:[299.8,43.1], frame:'laplace' },
+  { key:'charon', name:'Charon', of:'pluto', km:606.0, col:'#a9a49e',
+    a:19600, e:0.0, w:0.0, M:304.1, i:0.0, node:0.0,
+    P:6.387222, Pap:0.0, Pnd:0.0, frame:'equator' }
+];
+const MOON_EPOCH = 2451545.0;                 // 2000-01-01.5 TDB
+const moonsOf = k => MOONS.filter(m => m.of === k);
+
+// the plane a moon's elements are measured in, expressed in ecliptic axes
+function refFrame(m, t) {
+  let a0, d0;
+  if (m.frame === 'laplace') { a0 = m.pole[0]; d0 = m.pole[1]; }
+  else {
+    const R = ROT[m.of], T = century(t);
+    a0 = R.a0 + R.a0T * T; d0 = R.d0 + R.d0T * T;
+  }
+  a0 *= D2R; d0 *= D2R;
+  const z = [Math.cos(d0) * Math.cos(a0), Math.cos(d0) * Math.sin(a0), Math.sin(d0)];
+  const x = [-Math.sin(a0), Math.cos(a0), 0];
+  const y = cross(z, x);
+  return { x: eqToEcl(...x), y: eqToEcl(...y), z: eqToEcl(...z) };
+}
+// position relative to the parent planet, in AU, J2000 ecliptic
+function moonRel(m, t) {
+  const d = jd(t) - MOON_EPOCH, yr = d / 365.25;
+  const node = (m.node - (m.Pnd ? 360 / m.Pnd * yr : 0)) * D2R;   // nodes regress
+  const peri = (m.w + (m.Pap ? 360 / m.Pap * yr : 0)) * D2R;      // apses advance
+  let MA = (m.M + 360 / m.P * d) % 360;
+  if (MA > 180) MA -= 360; else if (MA < -180) MA += 360;
+  const E = solveKepler(MA * D2R, m.e);
+  const xo = m.a * (Math.cos(E) - m.e);
+  const yo = m.a * Math.sqrt(1 - m.e * m.e) * Math.sin(E);
+  const p = toEcliptic(xo, yo, peri, m.i * D2R, node);            // in the reference plane
+  const F = refFrame(m, t);
+  return [(p.x * F.x[0] + p.y * F.y[0] + p.z * F.z[0]) / AU_KM,
+          (p.x * F.x[1] + p.y * F.y[1] + p.z * F.z[1]) / AU_KM,
+          (p.x * F.x[2] + p.y * F.y[2] + p.z * F.z[2]) / AU_KM];
+}
+function moonHelio(m, t) {
+  const p = positionAt(byKey(m.of), century(t));
+  const r = moonRel(m, t);
+  return { x: p.x + r[0], y: p.y + r[1], z: p.z + r[2] };
+}
+
 /* ---------- textures, fetched only when you actually go and look ---------- */
 const TEX = {};
 function requestTex(key) {
