@@ -134,6 +134,10 @@ header > *{pointer-events:auto}
 .dot{width:9px;height:9px;border-radius:50%;flex:none}
 .row .nm{font-size:.8rem;flex:1}
 .row .au{font-family:var(--fm);font-size:.68rem;color:var(--ink2);font-variant-numeric:tabular-nums}
+.row.sub{padding-left:30px;background:rgba(255,255,255,.02)}
+.row.sub .nm{font-size:.74rem;color:var(--ink2)}
+.row.sub .dot{width:6px;height:6px}
+.row.sub.sel .nm{color:var(--ink)}
 #list .ft{padding:8px 13px 10px;border-top:1px solid var(--bdr)}
 
 /* ---------- detail card ---------- */
@@ -460,6 +464,7 @@ button.t.on{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,161
 
     <h3 data-toc="Moons">Nineteen moons</h3>
     <p>Approach a planet and its moons come with it, drawn to the same exaggeration as the planet so the system is internally to scale even though the whole thing is enlarged. Jupiter with the Galileans wheeling round it is the view Galileo had in 1610, and the one that ended the geocentric universe.</p>
+    <p>Click one, or pick it from the list beneath its planet, and you can go to it the same way you go to a planet — the camera flies over and you can drop into low orbit. There are no surface maps for them here, so a moon arrives as shape and sunlight only: the size factor and the lit fraction are real, the face is not, and being tidally locked it turns once per orbit.</p>
     <p>They are in the sky as well. Narrow the field below about a degree and Io, Europa, Ganymede and Callisto string out along the ecliptic beside Jupiter, arranged as they actually are that night — which is a real observing aid, because they are a binocular target and the pattern changes every few hours.</p>
     <p>Getting them right took two goes. JPL publishes mean elements for satellites, referenced to each planet's Laplace plane, and they looked ideal. They are not: their orbital <em>phases</em> are out by as much as 178°, which would have put Io on the wrong side of Jupiter — the most convincing kind of wrong. So instead each moon was sampled from JPL Horizons every 150 to 731 days across 1800–2050 and its elements fitted to that, exactly as the asteroids were. A moon keeps to its planet's equatorial plane and a planet's pole barely moves, so the inclination and node in ecliptic coordinates stay nearly constant and a straight line through them holds.</p>
     <p>Fourteen of them now sit within a quarter of a degree of Horizons; Io, Titan, Iapetus, Dione and Charon are inside five hundredths. The worst are Phobos at 6° — it orbits Mars three times a day and is dragged about by the planet's bulge — and Tethys at 2°. <strong>Mimas is missing.</strong> It is locked in a two-to-one resonance with Tethys and librates, and no fixed ellipse can follow that: the fit put it 111° along its orbit from where it belongs, so it is not here at all. Same reasoning as Hygiea in the belt.</p>
@@ -1114,7 +1119,14 @@ const UNMAPPED = {
   juno:   { km:  123.3, rotH:   7.210 },
   vesta:  { km:  262.7, rotH:   5.342 }
 };
-const radiusOf = k => ROT[k] ? ROT[k].km : UNMAPPED[k] ? UNMAPPED[k].km : 0;
+const radiusOf = k => {
+  if (ROT[k]) return ROT[k].km;
+  if (UNMAPPED[k]) return UNMAPPED[k].km;
+  const m = typeof MOONS !== 'undefined' && MOONS.find(x => x.key === k);
+  return m ? m.km : 0;
+};
+// heliocentric position of anything selectable, moon or not
+const helioOf = (b, t) => b.moon ? moonHelio(b, t) : positionAt(b, century(t));
 // equatorial -> ecliptic, the inverse of eclToEq
 const eqToEcl = (x, y, z) => [x, y * CE + z * SE, -y * SE + z * CE];
 
@@ -1217,6 +1229,28 @@ const MOONS = [
     a:[0.0001309896,+0.0000000000], e:[0.0001609,-0.0000000], I:[112.889420,-0.001416],
     L:[188.644176,2058641.424773], w:[39.874497,+0.106166], O:[227.391496,+0.003447] }
 ];
+const MOON_NOTE = {
+  phobos:'Goes round Mars three times a day, and is spiralling in.',
+  deimos:'So small that a brisk run would throw you off it.',
+  io:'The most volcanic body known, kneaded by Jupiter.',
+  europa:'Ice over a salt ocean holding more water than Earth does.',
+  ganymede:'Bigger than Mercury, and the only moon with a magnetic field.',
+  callisto:'The most cratered surface in the solar system. Nothing has resurfaced it.',
+  enceladus:'Vents water into space through cracks at its south pole.',
+  tethys:'Almost pure water ice, and barely denser than water.',
+  dione:'Ice cliffs, taken for wispy streaks until Cassini looked closely.',
+  rhea:'Cold enough that its ice behaves like rock.',
+  titan:'A thicker atmosphere than Earth&rsquo;s, and rivers of methane.',
+  iapetus:'One side dark as coal, the other bright as snow.',
+  miranda:'Cliffs twenty kilometres high — the tallest known anywhere.',
+  ariel:'Brightest of the Uranian moons, and the most resurfaced.',
+  umbriel:'The darkest of them, with one inexplicably bright ring near its equator.',
+  titania:'Largest of Uranus&rsquo;s moons, split by a system of rifts.',
+  oberon:'Outermost of the five, and heavily cratered.',
+  triton:'Orbits backwards, so Neptune caught it. Geysers of nitrogen.',
+  charon:'Half Pluto&rsquo;s width. The two swing round a point in the space between them.'
+};
+for (const m of MOONS) { m.moon = true; m.blurb = MOON_NOTE[m.key] || ''; m.r = 2.2; }
 const moonsOf = k => MOONS.filter(m => m.of === k);
 const moonByKey = k => MOONS.find(m => m.key === k);
 // position relative to the parent planet, AU, J2000 ecliptic
@@ -1251,7 +1285,7 @@ function requestTex(key) {
 // How many times larger than life the globe is being drawn. The compression is
 // nonlinear, so the local scale at radius r is d(scene)/d(AU) = pow * r^(pow-1).
 function exaggeration(b, Rpx, depth) {
-  const T = century(state.t), p = positionAt(b, T);
+  const p = helioOf(b, state.t);
   const r = Math.hypot(p.x, p.y, p.z);
   const scenePerAU = state.pow * Math.pow(r, state.pow - 1);
   const truePx = (radiusOf(b.key) / AU_KM) * scenePerAU * pxAt(depth);
@@ -1270,7 +1304,7 @@ function drawGlobe(b, sx, sy, Rcss, depth, opt) {
   const F0 = mapped ? bodyFrame(b.key, state.t) : { x: [1,0,0], y: [0,1,0], z: [0,0,1] };
   const F = { x: xf(F0.x), y: xf(F0.y), z: xf(F0.z) };
   const sun = mapped ? xf(subSolar(b.key, state.t).dir)
-                     : xf(nrm((p => [-p.x, -p.y, -p.z])(positionAt(b, century(state.t)))));
+                     : xf(nrm((p => [-p.x, -p.y, -p.z])(helioOf(b, state.t))));
   const basis = (opt && opt.basis) || { right: CV.right, up: CV.up, fwd: CV.fwd };
   const f = (opt && opt.f) || CV.f;
 
@@ -1362,6 +1396,11 @@ function drawMoons(b, s, Rg, pp) {
   for (const { m, q } of drawn) {
     const r = Math.max(1.6, Math.min(Rg * 0.9, m.km / Rk * Rg));
     if (q[2] > 0 && Math.hypot(q[0]-s[0], q[1]-s[1]) < Rg) continue;   // behind the planet
+    hits.push({ b: m, x: q[0], y: q[1] });
+    if (state.sel === m || state.hover === m) {
+      ctx.strokeStyle = hexA(m.col, state.sel === m ? .85 : .45); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(q[0], q[1], r + 7, 0, TAU); ctx.stroke();
+    }
     ctx.fillStyle = m.col;
     ctx.beginPath(); ctx.arc(q[0], q[1], r, 0, TAU); ctx.fill();
     if (Rg > 26) {
@@ -1436,7 +1475,7 @@ function flyTo(b, ms = 900, zoomOverride) {
   const T = century(state.t);
   let to = [0, 0, 0], zTo = 1;
   if (b) {
-    const p = positionAt(b, T);
+    const p = helioOf(b, state.t);
     to = toScene(p.x, p.y, p.z);
     const R = Math.max(sceneR(0.45), Math.hypot(...to));
     zTo = Math.max(1, Math.min(14, SCENE_MAX() / (R * 1.15)));
@@ -2170,9 +2209,30 @@ const ROWS = [
 ];
 let cell = {}, evtCache = { key: null, at: -1e15, val: null };
 
+const moonSub = document.createElement('div');
+function refreshMoonList() {
+  const b = state.sel;
+  const parent = b ? (b.moon ? byKey(b.of) : b) : null;
+  moonSub.remove();
+  if (!parent || !moonsOf(parent.key).length || state.mode === 'sky') return;
+  moonSub.innerHTML = '';
+  for (const m of moonsOf(parent.key)) {
+    const el = document.createElement('div');
+    el.className = 'row sub' + (state.sel === m ? ' sel' : '');
+    el.innerHTML = `<span class="dot" style="background:${m.col}"></span>
+      <span class="nm">${m.name}</span><span class="au"></span>`;
+    el.onclick = e => { e.stopPropagation(); select(m); flyTo(m); };
+    el.onmouseenter = () => { state.hover = m; needsDraw = true; };
+    el.onmouseleave = () => { if (state.hover === m) { state.hover = null; needsDraw = true; } };
+    moonSub.appendChild(el);
+  }
+  const host = rowMap[parent.key];
+  if (host) host.el.after(moonSub);
+}
 function select(b) {
   state.sel = b;
-  for (const k in rowMap) rowMap[k].el.classList.toggle('sel', !!b && k === b.key);
+  for (const k in rowMap)
+    rowMap[k].el.classList.toggle('sel', !!b && (k === b.key || (b.moon && k === b.of)));
   for (const k in skyRowMap) skyRowMap[k].el.classList.toggle('sel', !!b && k === b.key);
   detailEl.classList.toggle('show', !!b);
   $('hint').textContent = b ? 'Drag to pan · scroll to zoom' : 'Click a body';
@@ -2180,16 +2240,17 @@ function select(b) {
   rsCache = { key: null, day: null, val: null };
   needsDraw = true;
   queueHash();
+  refreshMoonList();
   if (!b) return;
   const sky = state.mode === 'sky';
-  const rows = sky ? SKY_ROWS : ROWS;
-  const skip = k => sky
+  const rows = b.moon ? MOON_ROWS : sky ? SKY_ROWS : ROWS;
+  const skip = k => b.moon ? false : sky
     ? ((b === SUN || b === MOON) && (k === 'rsun' || k === 'elong'))
       || (b !== MOON && k === 'phase') || (b === SUN && k === 'rearth')
     : (b.home && (k === 'rearth' || k === 'light' || k === 'elong'));
   detailEl.innerHTML =
     `<h2><span class="dot" style="background:${b.col};width:11px;height:11px"></span>${b.name}</h2>
-     <div class="sub">${b.blurb}</div>` +
+     <div class="sub">${b.moon ? 'Moon of ' + byKey(b.of).name + '. ' : ''}${b.blurb}</div>` +
     rows.filter(r => !skip(r[1]))
         .map(r => `<div class="kv"><span>${r[0]}</span><span data-c="${r[1]}">—</span></div>`).join('') +
     `<div class="evt" data-c="appr" hidden></div>` +
@@ -2199,6 +2260,14 @@ function select(b) {
   updateDetail();
 }
 
+const MOON_ROWS = [
+  ['From its planet', 'mdist'],
+  ['Orbit',           'mper'],
+  ['Radius',          'mrad'],
+  ['From the Sun',    'rsun'],
+  ['From Earth',      'rearth'],
+  ['Light delay',     'light']
+];
 const SKY_ROWS = [
   ['Altitude',    'alt'],
   ['Azimuth',     'az'],
@@ -2217,6 +2286,22 @@ const fmtClock = t => new Date(t).toLocaleTimeString(undefined,
 function updateDetail() {
   const b = state.sel; if (!b) return;
   const set = (k, v) => { if (cell[k]) cell[k].textContent = v; };
+  if (b.moon) {
+    const rel = moonRel(b, state.t);
+    const d = Math.hypot(rel.x, rel.y, rel.z) * AU_KM;
+    const per = Math.abs(360 / (b.L[1] / 36525));
+    const T = century(state.t), e = positionAt(EARTH, T), p = moonHelio(b, state.t);
+    const rE = Math.hypot(p.x - e.x, p.y - e.y, p.z - e.z);
+    set('mdist', Math.round(d).toLocaleString() + ' km');
+    set('mper', per < 1 ? (per * 24).toFixed(2) + ' hours' : per.toFixed(3) + ' days');
+    set('mrad', b.km.toLocaleString() + ' km');
+    set('rsun', Math.hypot(p.x, p.y, p.z).toFixed(3) + ' AU');
+    set('rearth', rE.toFixed(3) + ' AU');
+    set('light', fmtLight(rE));
+    if (cell.evt) cell.evt.hidden = true;
+    updateApproachCell(b);
+    return;
+  }
   if (state.mode === 'sky') {
     const loc = state.loc;
     const M = skyMatrix(state.t, loc.lat, loc.lon);
@@ -2268,6 +2353,21 @@ function updateDetail() {
     set('light', fmtLight(rEarth));
     set('elong', (Math.abs(rl) * R2D).toFixed(1) + '° ' + (rl > 0 ? 'E' : 'W'));
   }
+  updateApproachCell(b);
+  if (evtCache.key !== b.key || Math.abs(state.t - evtCache.at) > DAY / 2) {
+    const now = performance.now();
+    if (evtCache.key !== b.key || now - (evtCache.stamp || 0) > 250) {
+      evtCache = { key: b.key, at: state.t, stamp: now, val: nextEvent(b, state.t) };
+      const ev = evtCache.val, box = cell.evt;
+      if (box) {
+        box.hidden = !ev;
+        if (ev) box.innerHTML = `<span class="lbl">Next ${ev.label}</span>
+          <div class="when">${fmtDate(ev.t)}</div><div class="note">${ev.detail}</div>`;
+      }
+    }
+  }
+}
+function updateApproachCell(b) {
   if (cell.appr) {
     const a = approachInfo;
     if (!a || a.b !== b) cell.appr.hidden = true;
@@ -2283,6 +2383,12 @@ function updateDetail() {
           ${Math.abs(ss.lon).toFixed(1)}°${ss.lon < 0 ? 'W' : 'E'}. Turns once in
           ${per < 1.2 ? (per * 24).toFixed(2) + ' hours' : per.toFixed(2) + ' days'}${ROT[b.key].Wd < 0 ? ', backwards' : ''}.
           Radius ${ROT[b.key].km.toLocaleString()} km.`;
+      } else if (b.moon) {
+        const per = Math.abs(360 / (b.L[1] / 36525));
+        note = `No surface map, so this is shape and sunlight only — the lit fraction is
+          real, the face is not. Tidally locked, so it turns once per orbit:
+          ${per < 1 ? (per * 24).toFixed(2) + ' hours' : per.toFixed(2) + ' days'}.
+          Radius ${b.km.toLocaleString()} km.`;
       } else {
         const u = UNMAPPED[b.key];
         note = `No surface map, so this is shape and sunlight only — the lit fraction is
@@ -2297,18 +2403,6 @@ function updateDetail() {
         <div class="when">${a.state === 'ready' || a.state === 'unmapped' ? '×' + fmtBig(x) + ' actual size'
           : a.state === 'error' ? 'map unavailable' : 'loading map…'}</div>${alt}
         <div class="note">${note}</div>`;
-    }
-  }
-  if (evtCache.key !== b.key || Math.abs(state.t - evtCache.at) > DAY / 2) {
-    const now = performance.now();
-    if (evtCache.key !== b.key || now - (evtCache.stamp || 0) > 250) {
-      evtCache = { key: b.key, at: state.t, stamp: now, val: nextEvent(b, state.t) };
-      const ev = evtCache.val, box = cell.evt;
-      if (box) {
-        box.hidden = !ev;
-        if (ev) box.innerHTML = `<span class="lbl">Next ${ev.label}</span>
-          <div class="when">${fmtDate(ev.t)}</div><div class="note">${ev.detail}</div>`;
-      }
     }
   }
 }
@@ -2338,7 +2432,7 @@ function frame(now) {
   if (CAM.fly) stepFly(now);
   else if (state.mode === 'orrery' && state.sel && !state.sel.sky &&
            radiusOf(state.sel.key) && CAM.zoom >= APPROACH_ZOOM) {
-    const q = positionAt(state.sel, century(state.t));
+    const q = helioOf(state.sel, state.t);
     const to = toScene(q.x, q.y, q.z);
     if (Math.hypot(to[0]-CAM.tx, to[1]-CAM.ty, to[2]-CAM.tz) > 1e-9) {
       CAM.tx = to[0]; CAM.ty = to[1]; CAM.tz = to[2]; needsDraw = true;
@@ -2384,6 +2478,13 @@ function frame(now) {
       ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(c[0], c[1]); ctx.stroke();
       ctx.setLineDash([]);
     }
+  }
+  // a selected moon is its own approach target, drawn after its planet
+  if (state.sel && state.sel.moon) {
+    const mp = moonHelio(state.sel, state.t);
+    const ms = projAU(mp.x, mp.y, mp.z);
+    if (ms) items.push({ b: state.sel, p: mp, s: ms, z: ms[2] });
+    items.sort((m, n) => n.z - m.z);
   }
   const labels = [];
   approachInfo = null;
@@ -2577,7 +2678,7 @@ function setMode(m) {
   document.body.classList.toggle('sky', sky);
   if (clampRate()) syncTransport();
   // a body that only exists in one mode can't stay selected in the other
-  if (state.sel && ((sky && state.sel.home) || (!sky && state.sel.sky))) select(null);
+  if (state.sel && ((sky && (state.sel.home || state.sel.moon)) || (!sky && state.sel.sky))) select(null);
   else if (state.sel) select(state.sel);
   showTab(state.tab);
   computeView(); needsDraw = true; queueHash();
@@ -2765,13 +2866,13 @@ function readHash() {
     for (const el of document.querySelectorAll('.tr')) el.classList.toggle('on', +el.dataset.tr === k);
   }
   if (p.get('m') === 'sky') setMode('sky');
-  const b = [...BODIES, SUN, MOON].find(x => x.key === p.get('b'));
+  const b = [...BODIES, ...MOONS, SUN, MOON].find(x => x.key === p.get('b'));
   if (b) select(b);
   if (b && !b.sky && radiusOf(b.key) && CAM.zoom >= APPROACH_ZOOM) {
-    const q = positionAt(b, century(state.t));
+    const q = helioOf(b, state.t);
     const to = toScene(q.x, q.y, q.z);
     CAM.tx = to[0]; CAM.ty = to[1]; CAM.tz = to[2];
-    requestTex(b.key);
+    if (ROT[b.key]) requestTex(b.key);
   }
 }
 
