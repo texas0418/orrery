@@ -43,7 +43,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#05060a; --ink:#eeeef4; --ink2:#8d8da3; --ink3:#5a5a70;
+  --bg:#05060a; --ink:#eeeef4; --ink2:#8d8da3; --ink3:#7c7c94;
   --ac:#4f6ef7; --ac-l:#8ba1ff;
   --bdr:rgba(255,255,255,.07); --bdr2:rgba(255,255,255,.14);
   --panel:rgba(9,10,17,.72);
@@ -64,6 +64,13 @@ body::after{
   background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.028'/%3E%3C/svg%3E");
 }
 ::selection{background:var(--ac);color:#fff}
+.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;
+  clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+:focus-visible{outline:2px solid var(--ac-l);outline-offset:2px;border-radius:4px}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}
+}
 *{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.18) transparent}
 ::-webkit-scrollbar{width:8px;height:8px}
 ::-webkit-scrollbar-track{background:transparent}
@@ -281,7 +288,8 @@ button.t.on{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,161
 </head>
 <body>
 
-<canvas id="c"></canvas>
+<canvas id="c" role="img" aria-label="Loading"></canvas>
+<p id="sr" role="status" aria-live="polite" class="sr-only"></p>
 
 <header>
   <div class="brand">
@@ -298,9 +306,9 @@ button.t.on{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,161
   </div>
 </header>
 
-<div id="detail"></div>
+<div id="detail" role="region" aria-label="Selected body"></div>
 
-<aside id="list">
+<aside id="list" aria-label="Bodies and events">
   <div class="tabs">
     <button class="tab on" id="tabBodies">Bodies</button>
     <button class="tab" id="tabEvents">Coming up</button>
@@ -333,9 +341,9 @@ button.t.on{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,161
   </div>
   <input type="range" id="scrub" min="0" max="10000" value="5000" step="1" aria-label="Scrub through time">
   <div class="ctrls">
-    <button class="t" id="back">&#9664;&#9664;</button>
+    <button class="t" id="back" aria-label="Play backwards, or slower">&#9664;&#9664;</button>
     <button class="t pri" id="play">Play</button>
-    <button class="t" id="fwd">&#9654;&#9654;</button>
+    <button class="t" id="fwd" aria-label="Play forwards, or faster">&#9654;&#9654;</button>
     <button class="t" id="now">Now</button>
     <span class="spacer"></span>
     <div class="slid" id="spreadWrap">
@@ -373,7 +381,7 @@ button.t.on{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,161
   </div>
 </div>
 
-<div id="locEdit">
+<div id="locEdit" role="dialog" aria-modal="true" aria-label="Choose where you are standing">
   <div class="card">
     <span class="lbl">Stand somewhere else</span>
     <p>Anywhere on Earth. Everything is computed in your browser — nothing about where you are is sent anywhere, stored, or logged.</p>
@@ -398,12 +406,12 @@ button.t.on{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,161
   </div>
 </div>
 
-<div id="about">
+<div id="about" role="dialog" aria-modal="true" aria-label="About this page">
   <button class="ghost" id="closeAbout">Close</button>
   <div class="doc">
     <h2>Orrery</h2>
     <p style="color:var(--ink2)">A mechanical model of the solar system, with no mechanism.</p>
-    <nav class="toc" id="toc"></nav>
+    <nav class="toc" id="toc" aria-label="Sections"></nav>
 
     <h3 data-toc="Looking at">What you're looking at</h3>
     <p>The positions on screen are not an animation loop or a decorative approximation. Every frame, the page solves Kepler's equation for each planet from the orbital elements JPL publishes for the interval 1800–2050, and draws the answer. Set the date to any moment in that range and the picture is where those worlds genuinely were, or genuinely will be, to within a few arcminutes.</p>
@@ -414,10 +422,16 @@ button.t.on{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,161
       <li><strong>Positions:</strong> real. Elliptical, correctly oriented, correctly phased.</li>
       <li><strong>Orbit shapes:</strong> computed from the same elements as the planets on them, then warped by whatever the <em>Spread</em> slider is set to. Push Spread to 100 and you are looking at the true ellipses, with the Sun at a focus rather than the centre. Select a body and the two ends of its long axis get marked, which is where that stops being a technicality — Mercury's distance from the Sun swings by a third over its 88-day year.</li>
       <li><strong>Distances:</strong> compressed by default. The <em>Spread</em> slider is an exponent: at 100 the layout is linearly true to scale, at which point Mercury sits a pixel from the Sun and is effectively invisible. At the default 45 you can see the whole system at once. The numbers in the panels are always the true ones.</li>
-      <li><strong>Body sizes:</strong> not to scale, and could never be. At this zoom Earth would be far smaller than one pixel.</li>
+      <li><strong>Body sizes:</strong> not to scale, and could never be. At this zoom Earth would be far smaller than one pixel. The one place the page does enlarge things, the <em>Approach</em> view, prints the factor it is using.</li>
       <li><strong>Inclination:</strong> real, and now visible. The orrery is drawn with a camera in three dimensions, so the few degrees each orbit is tilted out of the plane of Earth's orbit are on screen rather than projected away. Press <em>Edge on</em> and select Pluto: 17° of tilt, swinging clear of the thin sheet everything else keeps to. Each planet drops a dotted line to that plane so you can read its height off directly.</li>
       <li><strong>Compression does not distort direction.</strong> <em>Spread</em> scales how far a body sits from the Sun but never which way, so the inclination and the ecliptic longitude on screen are exact at every setting. Only distance is negotiable.</li>
     </ul>
+
+    <h3 data-toc="The belt">The asteroid belt</h3>
+    <p>The gap between Mars and Jupiter is not empty, so four of its residents are drawn in it: <strong>Ceres, Pallas, Juno and Vesta</strong> — the first four found, between 1801 and 1807, and all four were counted as planets for about fifty years before anyone realised how many more there were.</p>
+    <p>They are worth having for the same reason Pluto is. Pallas is tilted almost 35° out of the plane, steeper than Pluto and steeper than anything else of its size; press <em>Edge on</em> and it climbs clear of everything. Juno and Pallas are both markedly eccentric. The belt is not a tidy ring.</p>
+    <p>Their elements are handled differently from the planets' and it is worth saying how. JPL publishes a current osculating orbit for each, which is exact today and drifts badly once you leave — Ceres alone ends up 14° out of place by 1800, because Jupiter has been pulling on it the whole way. So instead I sampled each orbit from JPL Horizons every five years across 1800–2050 and fitted secular rates to the result, which is the same treatment the planets get. That brings the worst error anywhere in the window down to <strong>0.7°</strong>. A fifth, Hygiea, would not fit that cleanly — it was still nearly 5° out — so it is not here. Being absent seemed better than being wrong.</p>
+    <p>They are left out of the sky view and the five-year sweep, since only Vesta ever gets near naked-eye brightness and none of them belongs in a list of things to go outside and look at.</p>
 
     <h3>Events</h3>
     <p>Select a planet and its card searches forward from the displayed date for the next time it matters. For the outer planets that's <strong>opposition</strong> — Earth passing directly between it and the Sun, when the planet rises at sunset and is closest and brightest all year. For Mercury and Venus it's <strong>greatest elongation</strong>, the furthest they ever stray from the Sun's glare, which is the only reason you ever get to see them.</p>
@@ -466,6 +480,10 @@ button.t.on{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,161
       <li><a href="https://worldwidetelescope.org/">WorldWide Telescope</a> — real survey imagery of the actual sky rather than a simulation of it.</li>
       <li><a href="https://www.solarsystemscope.com/">Solar System Scope</a> — a polished 3D model, and the source of the surface maps used here.</li>
     </ul>
+
+    <h3 data-toc="Reading it">If you can't see the screen</h3>
+    <p>The whole visual is a canvas, which is to say it is a picture with no text in it. So the canvas carries a written description of what it currently shows — which bodies are above your horizon and where, or where every planet is on the map — and that description is kept current in a polite live region as you scrub, fly or switch views. The panels beside it were already real text and already read properly.</p>
+    <p>If your system asks for reduced motion, the camera arrives instead of gliding and the page stops animating. Keyboard focus is visible everywhere, Escape closes whatever is open, and the dimmest text on the page was lifted until it passed contrast — it had been sitting at 3:1, which is not enough, and is now near 5:1.</p>
 
     <h3>Colophon</h3>
     <p>One HTML file and nine surface maps. No frameworks, no libraries, no build step, no server, no analytics, no cookies, nothing phoning home — the maps come from this domain, on demand, and only if you go looking for one. Two webfonts, a packed star catalogue, and about sixteen hundred lines of hand-written canvas and astronomy. It will keep working, unchanged, for as long as browsers run JavaScript.</p>
@@ -526,7 +544,23 @@ const BODIES = [
   { key:'pluto', name:'Pluto', col:'#a3958a', r:2.3, dwarf:true,
     a:[39.48211675,-0.00031596], e:[0.24882730, 0.00005170], I:[17.14001206,0.00004818],
     L:[238.92903833,145.20780515], w:[224.06891629,-0.04062942], O:[110.30393684,-0.01183482],
-    blurb:'Crosses inside Neptune’s orbit, and never once comes near it.' }
+    blurb:'Crosses inside Neptune’s orbit, and never once comes near it.' },
+  { key:'ceres', name:'Ceres', col:'#b9b0a4', r:2.2, minor:true,
+    a:[2.767587751,+0.000350715], e:[0.077815452,-0.000436024], I:[10.5948078,-0.0170423],
+    L:[160.792114,7819.541246], w:[153.067951,+1.728190], O:[80.559278,-1.488017],
+    blurb:'Round enough to be a dwarf planet, and a third of the belt&rsquo;s entire mass.' },
+  { key:'pallas', name:'Pallas', col:'#a8a89c', r:1.9, minor:true,
+    a:[2.770839168,-0.000328028], e:[0.232341590,-0.005515960], I:[34.8517610,+0.1466503],
+    L:[116.224116,7803.139166], w:[123.424916,-0.151120], O:[173.208805,-1.035819],
+    blurb:'Tilted 35&deg; out of the plane &mdash; steeper than Pluto, and nothing else large comes close.' },
+  { key:'juno', name:'Juno', col:'#b3a394', r:1.7, minor:true,
+    a:[2.669353054,-0.000035190], e:[0.257101926,+0.000763609], I:[12.9811193,-0.0281122],
+    L:[298.701621,8253.106559], w:[57.845907,+0.948959], O:[170.231199,-1.851361],
+    blurb:'Third asteroid ever found, in 1804, back when they were still counted as planets.' },
+  { key:'vesta', name:'Vesta', col:'#c9c2b0', r:1.9, minor:true,
+    a:[2.361446985,-0.000032541], e:[0.089352444,+0.000290458], I:[7.1372893,+0.0056823],
+    L:[234.426709,9918.889757], w:[254.256701,+1.155471], O:[103.958630,-0.897184],
+    blurb:'Brightest of them. At a dark-sky opposition you can just catch it unaided.' }
 ];
 const EARTH = BODIES.find(b => b.home);
 // U+FE0E forces text presentation — without it these render as colour emoji
@@ -938,10 +972,10 @@ function drawOrbit(b, T, active) {
     const a = pts[i-1], c = pts[i];
     if (!a || !c) continue;
     const near = Math.max(0, Math.min(1, 1 - (c[2] - CV.dist * .5) / (CV.dist * 1.6)));
-    const base = active ? .95 : (b.dwarf ? .22 : .34);
+    const base = active ? .95 : (b.dwarf ? .22 : b.minor ? .17 : .34);
     ctx.strokeStyle = hexA(b.col, base * (.30 + .70 * near));
     ctx.lineWidth = active ? 1.5 : 1;
-    if (b.dwarf) ctx.setLineDash([3, 5]);
+    if (b.dwarf || b.minor) ctx.setLineDash([3, 5]);
     ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(c[0], c[1]); ctx.stroke();
     ctx.setLineDash([]);
   }
@@ -1243,6 +1277,7 @@ function globeRadius(b) {
 
 /* ---------- camera moves ---------- */
 function flyTo(b, ms = 900, zoomOverride) {
+  if (reduceMotion.matches) ms = 1;          // asked not to animate: arrive instead
   const T = century(state.t);
   let to = [0, 0, 0], zTo = 1;
   if (b) {
@@ -1378,7 +1413,7 @@ const SUN = { key: 'sun', name: 'Sun', col: '#ffd98a', r: 9, sky: true,
   blurb: 'The one that makes the rest of it visible.' };
 const MOON = { key: 'moon', name: 'Moon', col: '#dcdcd2', r: 8, sky: true,
   blurb: 'Position from an abridged lunar theory — good to a few arcminutes.' };
-const SKY_BODIES = () => [SUN, MOON, ...BODIES.filter(b => !b.home)];
+const SKY_BODIES = () => [SUN, MOON, ...BODIES.filter(b => !b.home && !b.minor)];
 
 // illuminated fraction of the Moon, and where its bright limb points
 function moonPhase(t) {
@@ -1555,7 +1590,7 @@ function drawSky() {
   // --- Sun, Moon, planets ---
   const drawn = [];
   for (const b of SKY_BODIES()) {
-    if (b !== SUN && b !== MOON && b.dwarf) continue;         // Pluto is not a sky object
+    if (b !== SUN && b !== MOON && (b.dwarf || b.minor)) continue;   // too faint to be sky objects
     const d = geoDir(b, state.t);
     const h = toHoriz(M, d[0], d[1], d[2]);
     const s = skyProj(h);
@@ -1832,7 +1867,7 @@ function minimise(f, lo, hi) {
 function scanAhead(t0, days = 1826) {
   const out = [];
   const rel = {}, elo = {}, pairSep = {};
-  for (const b of BODIES) if (!b.home) { rel[b.key] = []; elo[b.key] = []; }
+  for (const b of BODIES) if (!b.home && !b.minor) { rel[b.key] = []; elo[b.key] = []; }
   const pairs = [];
   for (let i = 0; i < CONJ_BODIES.length; i++)
     for (let j = i + 1; j < CONJ_BODIES.length; j++) {
@@ -1846,7 +1881,7 @@ function scanAhead(t0, days = 1826) {
     const lonSun = Math.atan2(-e.y, -e.x);
     const sunU = unit(-e.x, -e.y, -e.z), u = {};
     for (const b of BODIES) {
-      if (b.home) continue;
+      if (b.home || b.minor) continue;
       const p = positionAt(b, T);
       const gx = p.x - e.x, gy = p.y - e.y, gz = p.z - e.z;
       u[b.key] = unit(gx, gy, gz);
@@ -1858,7 +1893,7 @@ function scanAhead(t0, days = 1826) {
   const at = i => t0 + i * DAY;
 
   for (const b of BODIES) {
-    if (b.home) continue;
+    if (b.home || b.minor) continue;
     const r = rel[b.key];
     if (b.inner) {                                   // greatest elongation
       for (let i = 1; i < days; i++) {
@@ -2124,6 +2159,7 @@ function frame(now) {
     if (skyDark !== skyDarkTarget()) needsDraw = true;   // let the tint finish easing
     if (state.sel) updateDetail();
     updateTonight();
+    announce();
     requestAnimationFrame(frame);
     return;
   }
@@ -2176,6 +2212,7 @@ function frame(now) {
   drawLabels(labels.sort((m, n) =>
     (n.b === state.sel) - (m.b === state.sel) || n.b.r - m.b.r));
   if (state.sel) updateDetail();
+  announce();
   requestAnimationFrame(frame);
 }
 const hits = [];
@@ -2288,7 +2325,7 @@ function markNear() {
 /* ---------- sky mode ---------- */
 const skyRowsEl = $('skyRows'), skyRowMap = {};
 for (const b of SKY_BODIES()) {
-  if (b.dwarf) continue;
+  if (b.dwarf || b.minor) continue;
   const el = document.createElement('div');
   el.className = 'row srow';
   el.innerHTML = `<span class="dot" style="background:${b.col}"></span>
@@ -2305,7 +2342,7 @@ function updateTonight() {
   const M = skyMatrix(state.t, loc.lat, loc.lon);
   const list = [];
   for (const b of SKY_BODIES()) {
-    if (b.dwarf) continue;
+    if (b.dwarf || b.minor) continue;
     const d = geoDir(b, state.t);
     const h = toHoriz(M, d[0], d[1], d[2]);
     list.push({ b, alt: altOf(h), az: azOf(h) });
@@ -2445,6 +2482,48 @@ $('geoBtn').onclick = () => {
     { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 });
 };
 
+/* ---------- describing the view for anyone who can't see it ---------- */
+const reduceMotion = window.matchMedia
+  ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
+let lastDesc = '', descAt = 0;
+function describeView() {
+  const when = fmtStamp(state.t);
+  if (state.mode === 'sky') {
+    const loc = state.loc;
+    const M = skyMatrix(state.t, loc.lat, loc.lon);
+    const up = [];
+    for (const b of SKY_BODIES()) {
+      const d = geoDir(b, state.t);
+      const h = toHoriz(M, d[0], d[1], d[2]);
+      const alt = altOf(h);
+      if (alt > 0) up.push(`${b.name} ${alt.toFixed(0)} degrees up in the ${compass(azOf(h))}`);
+    }
+    const sa = altOf(toHoriz(M, ...geoDir(SUN, state.t)));
+    const light = sa > 0 ? 'daylight' : sa > -18 ? 'twilight' : 'full dark';
+    return `Sky over ${loc.label || fmtLatLon(loc)} at ${when}, ${light}. `
+      + (up.length ? `Above the horizon: ${up.join('; ')}.` : 'Nothing is above the horizon.')
+      + (state.sel ? ` ${state.sel.name} is selected.` : '');
+  }
+  const T = century(state.t);
+  const list = BODIES.filter(b => !b.minor).map(b => {
+    const p = positionAt(b, T);
+    return `${b.name} at ${Math.hypot(p.x, p.y, p.z).toFixed(2)} AU in ${signOf(Math.atan2(p.y, p.x) * R2D).split(' ')[1]}`;
+  });
+  return `Map of the solar system from ${CAM.el.toFixed(0)} degrees above the plane of `
+    + `Earth's orbit, at ${when}. ${list.join('; ')}.`
+    + (state.sel ? ` ${state.sel.name} is selected.` : '');
+}
+function announce(force) {
+  const now = performance.now();
+  if (!force && now - descAt < 1500) return;
+  descAt = now;
+  const d = describeView();
+  if (d === lastDesc) return;
+  lastDesc = d;
+  cv.setAttribute('aria-label', d);
+  $('sr').textContent = d;
+}
+
 /* ---------- shareable state ---------- */
 function writeHash() {
   const p = new URLSearchParams();
@@ -2513,7 +2592,7 @@ const tocLinks = [];
     const b = document.createElement('button');
     b.textContent = h.dataset.toc || h.textContent;
     b.onclick = () => {
-      h.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      h.scrollIntoView({ behavior: reduceMotion.matches ? 'auto' : 'smooth', block: 'start' });
       setTimeout(spyToc, 620);          // smooth scroll fires events all the way; settle after
     };
     nav.appendChild(b);
@@ -2623,7 +2702,10 @@ window.addEventListener('keydown', e => {
   else if (e.key === 'ArrowRight') { state.t = clampT(state.t + DAY); needsDraw = true; syncTransport(); }
   else if (e.key === 'ArrowLeft')  { state.t = clampT(state.t - DAY); needsDraw = true; syncTransport(); }
   else if (e.key === 'n' || e.key === 'N') $('now').click();
-  else if (e.key === 'Escape') { $('about').classList.remove('show'); select(null); }
+  else if (e.key === 'Escape') {
+    if ($('locEdit').classList.contains('show')) { $('locEdit').classList.remove('show'); return; }
+    $('about').classList.remove('show'); select(null);
+  }
 });
 
 /* ---------- go ---------- */
