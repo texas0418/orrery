@@ -464,7 +464,10 @@ button.t.on{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,161
 
     <h3 data-toc="Moons">Nineteen moons</h3>
     <p>Approach a planet and its moons come with it, drawn to the same exaggeration as the planet so the system is internally to scale even though the whole thing is enlarged. Jupiter with the Galileans wheeling round it is the view Galileo had in 1610, and the one that ended the geocentric universe.</p>
-    <p>Click one, or pick it from the list beneath its planet, and you can go to it the same way you go to a planet — the camera flies over and you can drop into low orbit. There are no surface maps for them here, so a moon arrives as shape and sunlight only: the size factor and the lit fraction are real, the face is not, and being tidally locked it turns once per orbit.</p>
+    <p>Click one, or pick it from the list beneath its planet, and you can go to it the same way you go to a planet — the camera flies over and drops into low orbit.</p>
+    <p><strong>Twelve of them are mapped</strong>, from spacecraft: Voyager and Galileo for Io, Europa, Ganymede and Callisto; Cassini for Titan, Enceladus, Dione, Rhea and Iapetus; Voyager 2 for Triton; Viking for Phobos; and our own Moon. Their orientation needs no rotation table, because a synchronous satellite keeps one face to its planet — which is also the IAU convention for these bodies, longitude zero pointing at the primary. So the hemisphere turned towards you is the one that really is, and it is the same hemisphere anyone has ever charted.</p>
+    <p>Several of those maps are <strong>monochrome</strong>, because the controlled mosaics they come from are. Io is famously sulphur-yellow and arrives here in grey. I would rather hand you the real basemap without its colour than tint it to look like the photograph you were expecting. Iapetus loses nothing at all: its dark and bright hemispheres are a brightness difference, and that is exactly what a monochrome mosaic records.</p>
+    <p>Coverage is honest too. Triton was photographed by one spacecraft on one pass, so its map covers the hemisphere Voyager 2 saw and no more. <strong>Eight moons have no map here</strong> — Tethys, Mimas' absent neighbours among the Uranian five, Deimos and Charon among them — and those arrive as shape and sunlight only: the size factor and the lit fraction are real, the face is not.</p>
     <p>They are in the sky as well. Narrow the field below about a degree and Io, Europa, Ganymede and Callisto string out along the ecliptic beside Jupiter, arranged as they actually are that night — which is a real observing aid, because they are a binocular target and the pattern changes every few hours.</p>
     <p>Getting them right took two goes. JPL publishes mean elements for satellites, referenced to each planet's Laplace plane, and they looked ideal. They are not: their orbital <em>phases</em> are out by as much as 178°, which would have put Io on the wrong side of Jupiter — the most convincing kind of wrong. So instead each moon was sampled from JPL Horizons every 150 to 731 days across 1800–2050 and its elements fitted to that, exactly as the asteroids were. A moon keeps to its planet's equatorial plane and a planet's pole barely moves, so the inclination and node in ecliptic coordinates stay nearly constant and a straight line through them holds.</p>
     <p>Fourteen of them now sit within a quarter of a degree of Horizons; Io, Titan, Iapetus, Dione and Charon are inside five hundredths. The worst are Phobos at 6° — it orbits Mars three times a day and is dragged about by the planet's bulge — and Tethys at 2°. <strong>Mimas is missing.</strong> It is locked in a two-to-one resonance with Tethys and librates, and no fixed ellipse can follow that: the fit put it 111° along its orbit from where it belongs, so it is not here at all. Same reasoning as Hygiea in the belt.</p>
@@ -501,7 +504,7 @@ button.t.on{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,161
     <h3>Colophon</h3>
     <p>One HTML file and nine surface maps. No frameworks, no libraries, no build step, no server, no analytics, no cookies, nothing phoning home — the maps come from this domain, on demand, and only if you go looking for one. Two webfonts, a packed star catalogue, and about sixteen hundred lines of hand-written canvas and astronomy. It will keep working, unchanged, for as long as browsers run JavaScript.</p>
     <p>Planetary elements from <em>Approximate Positions of the Major Planets</em> (E. M. Standish, JPL Solar System Dynamics), the low-precision table valid 1800–2050. The timeline stops at both ends of that window rather than extrapolate into fiction. Precession is IAU 1976; nutation and aberration are not applied, which costs less than an arcminute. Sidereal time is mean, not apparent.</p>
-    <p>Surface maps are from <strong>Solar System Scope</strong>, <strong>CC BY 4.0</strong>, built from Messenger, Viking, Cassini and Hubble imagery with colours tuned to true-colour photography. Rotational elements are from the <strong>IAU Working Group on Cartographic Coordinates and Rotational Elements</strong> (2015 report).</p>
+    <p>Planet surface maps are from <strong>Solar System Scope</strong>, <strong>CC BY 4.0</strong>, built from Messenger, Viking, Cassini and Hubble imagery with colours tuned to true-colour photography. Moon surface maps are controlled mosaics from the <strong>USGS Astrogeology Science Center</strong>, derived from NASA missions and in the <strong>public domain</strong>. Rotational elements are from the <strong>IAU Working Group on Cartographic Coordinates and Rotational Elements</strong> (2015 report).</p>
     <p>Star positions are an extract of the <strong>HYG database</strong> v3.8 by David Nash (astronexus), used and redistributed under <strong>CC BY-SA 4.0</strong> — that extract stays under the same licence. Constellation figures are from <strong>d3-celestial</strong>, copyright 2015 Olaf Frohn, BSD 3-Clause. The lunar theory is Paul Schlyter's abridged series. My thanks to all three; none of them had any part in the mistakes.</p>
     <p>The source is on GitHub at <a href="https://github.com/texas0418/orrery">texas0418/orrery</a> — the code MIT, the star extract still CC BY-SA 4.0, and <code>build-skydata.js</code> there if you want to rebuild the catalogue from upstream yourself.</p>
     <div class="rule"></div>
@@ -1251,10 +1254,32 @@ const MOON_NOTE = {
   charon:'Half Pluto&rsquo;s width. The two swing round a point in the space between them.'
 };
 for (const m of MOONS) { m.moon = true; m.blurb = MOON_NOTE[m.key] || ''; m.r = 2.2; }
+MOONS.unshift({ key:'luna', name:'Moon', of:'earth', km:1737.4, col:'#dcdcd2', special:'luna',
+  L:[0, 481267.881],
+  blurb:'Ours. Drifting away four centimetres a year, and always showing the same face.' });
+const MOON_MAP_LIST = ['callisto', 'dione', 'enceladus', 'europa', 'ganymede', 'iapetus', 'io', 'luna', 'phobos', 'rhea', 'titan', 'triton'];                 // filled below with whatever maps ship
+const MOON_MAPS = new Set(MOON_MAP_LIST);
 const moonsOf = k => MOONS.filter(m => m.of === k);
+
+// A synchronous satellite keeps one face to its planet, which IS the IAU
+// convention for these bodies: longitude zero points at the primary. So the
+// orientation follows from the orbit itself, with no rotation table needed.
+function moonFrame(m, t) {
+  const r = moonRel(m, t), q = moonRel(m, t + 600e3);   // ten minutes on, for the normal
+  const rv = [r.x, r.y, r.z];
+  const z = nrm(cross(rv, [q.x - r.x, q.y - r.y, q.z - r.z]));
+  const x = nrm([-r.x, -r.y, -r.z]);                    // the sub-planet point
+  return { x, y: cross(z, x), z };
+}
 const moonByKey = k => MOONS.find(m => m.key === k);
 // position relative to the parent planet, AU, J2000 ecliptic
-const moonRel = (m, t) => positionAt(m, century(t));
+const moonRel = (m, t) => {
+  if (m.special === 'luna') {          // the abridged lunar theory beats any fitted ellipse
+    const g = moonGeo(t), d = g.km / AU_KM;
+    return { x: g.x * d, y: g.y * d, z: g.z * d };
+  }
+  return positionAt(m, century(t));
+};
 function moonHelio(m, t) {
   const p = positionAt(byKey(m.of), century(t)), r = moonRel(m, t);
   return { x: p.x + r.x, y: p.y + r.y, z: p.z + r.z };
@@ -1278,7 +1303,7 @@ function requestTex(key) {
     needsDraw = true;
   };
   img.onerror = () => { rec.state = 'error'; needsDraw = true; };
-  img.src = 'tex/' + key + '.jpg';
+  img.src = 'tex/' + (key === 'luna' ? 'moon' : key) + '.jpg';
   return rec;
 }
 
@@ -1298,13 +1323,14 @@ const globeCtx = globeCv.getContext('2d');
 // closing right in gives the view from low orbit: the limb curves away and you
 // see less than a hemisphere, as you would.
 function drawGlobe(b, sx, sy, Rcss, depth, opt) {
-  const mapped = !!ROT[b.key];
+  const mapped = b.moon ? MOON_MAPS.has(b.key) : !!ROT[b.key];
   const tex = mapped ? requestTex(b.key) : { state: 'unmapped' };
   const xf = (opt && opt.xf) || (v => v);
-  const F0 = mapped ? bodyFrame(b.key, state.t) : { x: [1,0,0], y: [0,1,0], z: [0,0,1] };
+  const F0 = !mapped ? { x: [1,0,0], y: [0,1,0], z: [0,0,1] }
+           : b.moon ? moonFrame(b, state.t)
+                    : bodyFrame(b.key, state.t);
   const F = { x: xf(F0.x), y: xf(F0.y), z: xf(F0.z) };
-  const sun = mapped ? xf(subSolar(b.key, state.t).dir)
-                     : xf(nrm((p => [-p.x, -p.y, -p.z])(helioOf(b, state.t))));
+  const sun = xf(nrm((p => [-p.x, -p.y, -p.z])(helioOf(b, state.t))));
   const basis = (opt && opt.basis) || { right: CV.right, up: CV.up, fwd: CV.fwd };
   const f = (opt && opt.f) || CV.f;
 
@@ -2385,10 +2411,13 @@ function updateApproachCell(b) {
           Radius ${ROT[b.key].km.toLocaleString()} km.`;
       } else if (b.moon) {
         const per = Math.abs(360 / (b.L[1] / 36525));
-        note = `No surface map, so this is shape and sunlight only — the lit fraction is
-          real, the face is not. Tidally locked, so it turns once per orbit:
-          ${per < 1 ? (per * 24).toFixed(2) + ' hours' : per.toFixed(2) + ' days'}.
-          Radius ${b.km.toLocaleString()} km.`;
+        const spin = `Tidally locked, so it turns once per orbit:
+          ${per < 1 ? (per * 24).toFixed(2) + ' hours' : per.toFixed(2) + ' days'}.`;
+        note = MOON_MAPS.has(b.key)
+          ? `${spin} Longitude zero faces ${byKey(b.of).name} — which is why that hemisphere
+             is the one anyone has charted. Radius ${b.km.toLocaleString()} km.`
+          : `No surface map, so this is shape and sunlight only — the lit fraction is
+             real, the face is not. ${spin} Radius ${b.km.toLocaleString()} km.`;
       } else {
         const u = UNMAPPED[b.key];
         note = `No surface map, so this is shape and sunlight only — the lit fraction is

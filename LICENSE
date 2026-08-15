@@ -53,7 +53,16 @@ STAR_BLOB, STAR_NAMES
   CC BY-SA 4.0 or a compatible licence. You may not add restrictions to it.
   build-skydata.js regenerates it from the upstream CSV.
 
-public_html/tex/*.jpg
+public_html/tex/{io,europa,ganymede,callisto,titan,enceladus,dione,rhea,
+                 iapetus,triton,phobos}.jpg
+  Controlled global mosaics from the USGS Astrogeology Science Center,
+  derived from NASA Voyager, Galileo, Cassini, New Horizons and Viking
+  imagery -- https://astrogeology.usgs.gov/ -- downscaled to 1024x512.
+
+  Public domain (US Government work). No restrictions; credit is given in
+  the page's About panel as a courtesy.
+
+public_html/tex/{mercury,venus,earth,mars,jupiter,saturn,uranus,neptune,moon}.jpg
   Planetary and lunar surface maps from Solar System Scope --
   https://www.solarsystemscope.com/textures/ -- downscaled to 1024x512 and
   recompressed. Built from Messenger, Viking, Cassini and Hubble imagery.
