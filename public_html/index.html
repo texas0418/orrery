@@ -352,7 +352,7 @@ button.t.on{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,161
     </div>
     <div class="slid" id="fieldWrap" hidden>
       <span class="lbl">Field</span>
-      <input type="range" id="fov" min="3" max="150" value="105" step="1" aria-label="Field of view">
+      <input type="range" id="fov" min="0.25" max="150" step="0.25" value="105" step="1" aria-label="Field of view">
     </div>
   </div>
   <div class="ctrls" id="orrCtrls">
@@ -454,8 +454,15 @@ button.t.on{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,161
     <p><strong>The sizes are a lie, and the page says by how much.</strong> At any honest scale you never see a globe — Earth is far under a pixel from anywhere you would want to watch the solar system from. So the approach view enlarges, and prints the factor it is using: <em>×3.8 thousand actual size</em>, recalculated for your exact camera. Nothing else on the page is exaggerated, and this is the one place that needed saying out loud.</p>
     <p>Other things I have not pretended about. The bodies are drawn as spheres; Saturn is really flattened by a tenth and Jupiter by a sixteenth. Saturn's rings come from measured radii — the C, B and A rings with the Cassini division between the last two — but neither casts a shadow on the other, and edge-on they nearly vanish, which is true and is why they look so thin in 2026, a year after the plane crossing. Venus is its cloud deck, because that is all anyone has ever seen from outside. Uranus and Neptune are very nearly featureless in reality, so any banding on them is interpretation, not observation. The Moon's orientation omits the small libration terms and is good to a degree or two.</p>
     <p>The maps are fetched only when you actually go and look, one body at a time, from this same domain. The page still weighs about sixty kilobytes until you ask for a world.</p>
-    <p>You can keep going in until a planet fills the screen. Pluto and the four asteroids can be visited too, but there are no maps for them here — so they arrive as shape and sunlight only. The lit fraction is real and the size factor is real; the face is not, and the panel says so rather than inventing a surface.</p>
+    <p>You can keep going in until you are in low orbit. The globe is ray-traced against a real sphere rather than shaded as a flat disc, so as you close in the limb curves away and you see less than a hemisphere, exactly as you would from a few hundred kilometres up. The panel reports the implied altitude and how many radii out you are.</p>
+    <p> Pluto and the four asteroids can be visited too, but there are no maps for them here — so they arrive as shape and sunlight only. The lit fraction is real and the size factor is real; the face is not, and the panel says so rather than inventing a surface.</p>
     <p>In <em>Sky</em>, the Moon is the exception that needs no exaggeration at all: it subtends half a degree, so narrow the field below about twelve degrees and it is simply drawn at the size it is, phase and all.</p>
+
+    <h3 data-toc="Moons">Nineteen moons</h3>
+    <p>Approach a planet and its moons come with it, drawn to the same exaggeration as the planet so the system is internally to scale even though the whole thing is enlarged. Jupiter with the Galileans wheeling round it is the view Galileo had in 1610, and the one that ended the geocentric universe.</p>
+    <p>They are in the sky as well. Narrow the field below about a degree and Io, Europa, Ganymede and Callisto string out along the ecliptic beside Jupiter, arranged as they actually are that night — which is a real observing aid, because they are a binocular target and the pattern changes every few hours.</p>
+    <p>Getting them right took two goes. JPL publishes mean elements for satellites, referenced to each planet's Laplace plane, and they looked ideal. They are not: their orbital <em>phases</em> are out by as much as 178°, which would have put Io on the wrong side of Jupiter — the most convincing kind of wrong. So instead each moon was sampled from JPL Horizons every 150 to 731 days across 1800–2050 and its elements fitted to that, exactly as the asteroids were. A moon keeps to its planet's equatorial plane and a planet's pole barely moves, so the inclination and node in ecliptic coordinates stay nearly constant and a straight line through them holds.</p>
+    <p>Fourteen of them now sit within a quarter of a degree of Horizons; Io, Titan, Iapetus, Dione and Charon are inside five hundredths. The worst are Phobos at 6° — it orbits Mars three times a day and is dragged about by the planet's bulge — and Tethys at 2°. <strong>Mimas is missing.</strong> It is locked in a two-to-one resonance with Tethys and librates, and no fixed ellipse can follow that: the fit put it 111° along its orbit from where it belongs, so it is not here at all. Same reasoning as Hygiea in the belt.</p>
 
     <h3>Controls</h3>
     <ul>
@@ -1144,111 +1151,79 @@ function subSolar(key, t) {
 }
 
 /* ============================================================================
-   MOONS — mean elements from JPL's satellite tables. Most are referenced to
-   the planet's Laplace plane (a pole given per satellite); the Uranian and
-   Plutonian sets are referenced to the planet's own equator, so those borrow
-   the IAU pole from ROT. Nodes regress and apses advance at the published
-   periods. Epoch 2000-01-01.5 TDB.
+   MOONS — the same element form as the planets, so the same solver runs them.
+   Fitted to JPL Horizons: each orbit sampled every 731 days across 1800–2050
+   and secular rates fitted to the series. A moon keeps to its planet's
+   equatorial plane, and a planet's pole barely moves, so ecliptic inclination
+   and node are near-constant and a linear fit holds. Published mean elements
+   were tried first and abandoned — their phases were out by up to 178°.
    ========================================================================== */
 const MOONS = [
   { key:'phobos', name:'Phobos', of:'mars', km:11.1, col:'#8d8378',
-    a:9375, e:0.015, w:216.3, M:189.7, i:1.1, node:169.2,
-    P:0.3187, Pap:1.1, Pnd:2.3, pole:[317.7,52.9], frame:'laplace' },
+    a:[0.0000626917,-0.0000000000], e:[0.0151210,+0.0000036], I:[26.715346,+0.002697],
+    L:[256.683302,41231035.764678], w:[67.667904,+15895.037059], O:[82.905707,-0.195861] },
   { key:'deimos', name:'Deimos', of:'mars', km:6.2, col:'#8d8378',
-    a:23457, e:0.0, w:0.0, M:205.0, i:1.8, node:54.3,
-    P:1.2625, Pap:0.0, Pnd:56.2, pole:[316.6,53.5], frame:'laplace' },
+    a:[0.0001568134,-0.0000000000], e:[0.0002721,+0.0000054], I:[25.797052,+0.056828],
+    L:[300.633455,10415537.909173], w:[289.895333,+654.523028], O:[83.112677,+0.000781] },
   { key:'io', name:'Io', of:'jupiter', km:1821.6, col:'#e0cf7a',
-    a:421800, e:0.004, w:49.1, M:330.9, i:0.0, node:0.0,
-    P:1.762732, Pap:1.333, Pnd:0.0, pole:[268.1,64.5], frame:'laplace' },
+    a:[0.0028210958,+0.0000000001], e:[0.0041776,+0.0000009], I:[2.214970,-0.000830],
+    L:[18.177981,7432434.202066], w:[47.385237,-27010.472985], O:[337.868255,-0.056609] },
   { key:'europa', name:'Europa', of:'jupiter', km:1560.8, col:'#e8ded0',
-    a:671100, e:0.009, w:45.0, M:345.4, i:0.5, node:184.0,
-    P:3.525463, Pap:1.394, Pnd:30.202, pole:[268.1,64.5], frame:'laplace' },
+    a:[0.0044871037,+0.0000000002], e:[0.0093640,-0.0000006], I:[2.241151,+0.000792],
+    L:[212.737507,3702711.805924], w:[227.287766,-27010.601344], O:[338.602740,+0.456060] },
   { key:'ganymede', name:'Ganymede', of:'jupiter', km:2634.1, col:'#b9a894',
-    a:1070400, e:0.001, w:198.3, M:324.8, i:0.2, node:58.5,
-    P:7.155588, Pap:68.301, Pnd:137.812, pole:[268.2,64.6], frame:'laplace' },
+    a:[0.0071565519,-0.0000000579], e:[0.0016158,-0.0000639], I:[2.215847,+0.081889],
+    L:[220.015770,1837850.604883], w:[158.082761,+454.813620], O:[338.959752,-0.702490] },
   { key:'callisto', name:'Callisto', of:'jupiter', km:2410.3, col:'#8e8074',
-    a:1882700, e:0.007, w:43.8, M:87.4, i:0.3, node:309.1,
-    P:16.69044, Pap:277.921, Pnd:577.264, pole:[268.7,64.8], frame:'laplace' },
-  { key:'mimas', name:'Mimas', of:'saturn', km:198.2, col:'#c8c6c0',
-    a:186000, e:0.02, w:160.4, M:275.3, i:1.6, node:66.2,
-    P:0.942422, Pap:0.493, Pnd:0.986, pole:[40.6,83.5], frame:'laplace' },
+    a:[0.0125879180,+0.0000000488], e:[0.0073533,-0.0000070], I:[2.023474,+0.040321],
+    L:[79.200363,787883.422006], w:[351.879823,+67.108087], O:[338.935511,-6.705943] },
   { key:'enceladus', name:'Enceladus', of:'saturn', km:252.1, col:'#eef2f4',
-    a:238400, e:0.005, w:119.5, M:57.0, i:0.0, node:0.0,
-    P:1.370218, Pap:2.916, Pnd:0.0, pole:[40.6,83.5], frame:'laplace' },
+    a:[0.0015936810,-0.0000000001], e:[0.0048598,+0.0000002], I:[28.050746,-0.000066],
+    L:[311.824609,9596282.551351], w:[301.122816,+12344.110322], O:[169.526427,-0.013630] },
   { key:'tethys', name:'Tethys', of:'saturn', km:533.0, col:'#d7d5cd',
-    a:295000, e:0.001, w:335.3, M:0.0, i:1.1, node:273.0,
-    P:1.887802, Pap:0.005, Pnd:4.982, pole:[40.6,83.5], frame:'laplace' },
+    a:[0.0019717883,+0.0000000000], e:[0.0010304,+0.0000010], I:[28.067605,+0.012553],
+    L:[318.092396,6965241.208928], w:[352.670253,+34372.628753], O:[169.509841,-0.024368] },
   { key:'dione', name:'Dione', of:'saturn', km:561.4, col:'#cfcdc6',
-    a:377700, e:0.002, w:116.0, M:212.0, i:0.0, node:0.0,
-    P:2.736916, Pap:11.698, Pnd:0.0, pole:[40.6,83.5], frame:'laplace' },
+    a:[0.0025244370,+0.0000000003], e:[0.0022417,+0.0000038], I:[28.045908,+0.000864],
+    L:[306.477577,4804313.356893], w:[344.247836,+3077.230874], O:[169.521947,-0.019409] },
   { key:'rhea', name:'Rhea', of:'saturn', km:763.8, col:'#c6c2b8',
-    a:527200, e:0.001, w:44.3, M:31.5, i:0.3, node:133.7,
-    P:4.517503, Pap:33.939, Pnd:35.775, pole:[40.6,83.5], frame:'laplace' },
+    a:[0.0035243337,-0.0000000005], e:[0.0010099,-0.0000011], I:[28.018348,-0.003275],
+    L:[181.732059,2910678.952495], w:[334.701962,+51.123931], O:[169.449560,-0.119059] },
   { key:'titan', name:'Titan', of:'saturn', km:2574.7, col:'#d9a441',
-    a:1221900, e:0.029, w:78.3, M:11.7, i:0.3, node:78.6,
-    P:15.945448, Pap:346.68, Pnd:687.37, pole:[36.4,84.0], frame:'laplace' },
+    a:[0.0081682157,-0.0000000049], e:[0.0287689,-0.0001555], I:[27.726665,+0.096569],
+    L:[137.087289,824623.999517], w:[333.536799,+50.884119], O:[169.231834,-0.500579] },
   { key:'iapetus', name:'Iapetus', of:'saturn', km:734.5, col:'#a2917c',
-    a:3561700, e:0.028, w:254.5, M:74.8, i:7.6, node:86.5,
-    P:79.331002, Pap:1662.9, Pnd:3130.302, pole:[288.7,78.9], frame:'laplace' },
+    a:[0.0238084733,-0.0000000120], e:[0.0283704,-0.0000417], I:[17.286054,-0.995456],
+    L:[217.381556,165748.758595], w:[8.654684,+11.275113], O:[139.618282,-3.715375] },
   { key:'miranda', name:'Miranda', of:'uranus', km:235.8, col:'#b9c2c6',
-    a:129846, e:0.001, w:154.8, M:73.0, i:4.4, node:100.9,
-    P:1.413479, Pap:8.939, Pnd:17.787, frame:'equator' },
+    a:[0.0008681509,+0.0000000002], e:[0.0013702,-0.0000002], I:[97.684943,-0.013524],
+    L:[131.072640,9302576.539726], w:[58.067889,+2003.214885], O:[167.470847,-0.236048] },
   { key:'ariel', name:'Ariel', of:'uranus', km:578.9, col:'#c3ccd0',
-    a:190929, e:0.001, w:9.6, M:193.5, i:0.0, node:0.0,
-    P:2.520379, Pap:28.901, Pnd:0.0, frame:'equator' },
+    a:[0.0012763942,-0.0000000002], e:[0.0013229,-0.0000185], I:[97.730192,+0.001172],
+    L:[5.728640,5217072.649021], w:[245.561513,+620.537444], O:[167.653509,+0.003724] },
   { key:'umbriel', name:'Umbriel', of:'uranus', km:584.7, col:'#8d949a',
-    a:265986, e:0.004, w:183.4, M:253.0, i:0.1, node:174.8,
-    P:4.144177, Pap:64.126, Pnd:129.745, frame:'equator' },
+    a:[0.0017780918,-0.0000000010], e:[0.0039525,-0.0002498], I:[97.742122,+0.003420],
+    L:[53.866840,3172885.673734], w:[154.097586,+280.037367], O:[167.671547,+0.016456] },
   { key:'titania', name:'Titania', of:'uranus', km:788.4, col:'#c0c6c8',
-    a:436298, e:0.002, w:184.0, M:68.1, i:0.1, node:29.5,
-    P:8.705869, Pap:579.928, Pnd:1644.649, frame:'equator' },
+    a:[0.0029164633,-0.0000000085], e:[0.0017290,+0.0003499], I:[97.827781,+0.039625],
+    L:[84.179274,1510360.381820], w:[354.794557,-125.765755], O:[167.667919,-0.044955] },
   { key:'oberon', name:'Oberon', of:'uranus', km:761.4, col:'#a8aeb2',
-    a:583511, e:0.002, w:132.2, M:143.6, i:0.1, node:76.8,
-    P:13.463237, Pap:158.604, Pnd:192.798, frame:'equator' },
+    a:[0.0039005823,+0.0000000086], e:[0.0015678,-0.0000554], I:[97.857985,+0.026979],
+    L:[155.226614,976659.573615], w:[128.242990,-140.992005], O:[167.715183,-0.016552] },
   { key:'triton', name:'Triton', of:'neptune', km:1353.4, col:'#dbe4e6',
-    a:354800, e:0.0, w:0.0, M:63.0, i:157.3, node:178.1,
-    P:5.876994, Pap:0.0, Pnd:340.379, pole:[299.8,43.1], frame:'laplace' },
+    a:[0.0023714667,+0.0000000001], e:[0.0001275,+0.0000002], I:[130.189539,-12.623473],
+    L:[289.986638,2237464.923714], w:[308.710858,+84.521823], O:[215.499361,+22.617821] },
   { key:'charon', name:'Charon', of:'pluto', km:606.0, col:'#a9a49e',
-    a:19600, e:0.0, w:0.0, M:304.1, i:0.0, node:0.0,
-    P:6.387222, Pap:0.0, Pnd:0.0, frame:'equator' }
+    a:[0.0001309896,+0.0000000000], e:[0.0001609,-0.0000000], I:[112.889420,-0.001416],
+    L:[188.644176,2058641.424773], w:[39.874497,+0.106166], O:[227.391496,+0.003447] }
 ];
-const MOON_EPOCH = 2451545.0;                 // 2000-01-01.5 TDB
 const moonsOf = k => MOONS.filter(m => m.of === k);
-
-// the plane a moon's elements are measured in, expressed in ecliptic axes
-function refFrame(m, t) {
-  let a0, d0;
-  if (m.frame === 'laplace') { a0 = m.pole[0]; d0 = m.pole[1]; }
-  else {
-    const R = ROT[m.of], T = century(t);
-    a0 = R.a0 + R.a0T * T; d0 = R.d0 + R.d0T * T;
-  }
-  a0 *= D2R; d0 *= D2R;
-  const z = [Math.cos(d0) * Math.cos(a0), Math.cos(d0) * Math.sin(a0), Math.sin(d0)];
-  const x = [-Math.sin(a0), Math.cos(a0), 0];
-  const y = cross(z, x);
-  return { x: eqToEcl(...x), y: eqToEcl(...y), z: eqToEcl(...z) };
-}
-// position relative to the parent planet, in AU, J2000 ecliptic
-function moonRel(m, t) {
-  const d = jd(t) - MOON_EPOCH, yr = d / 365.25;
-  const node = (m.node - (m.Pnd ? 360 / m.Pnd * yr : 0)) * D2R;   // nodes regress
-  const peri = (m.w + (m.Pap ? 360 / m.Pap * yr : 0)) * D2R;      // apses advance
-  let MA = (m.M + 360 / m.P * d) % 360;
-  if (MA > 180) MA -= 360; else if (MA < -180) MA += 360;
-  const E = solveKepler(MA * D2R, m.e);
-  const xo = m.a * (Math.cos(E) - m.e);
-  const yo = m.a * Math.sqrt(1 - m.e * m.e) * Math.sin(E);
-  const p = toEcliptic(xo, yo, peri, m.i * D2R, node);            // in the reference plane
-  const F = refFrame(m, t);
-  return [(p.x * F.x[0] + p.y * F.y[0] + p.z * F.z[0]) / AU_KM,
-          (p.x * F.x[1] + p.y * F.y[1] + p.z * F.z[1]) / AU_KM,
-          (p.x * F.x[2] + p.y * F.y[2] + p.z * F.z[2]) / AU_KM];
-}
+const moonByKey = k => MOONS.find(m => m.key === k);
+// position relative to the parent planet, AU, J2000 ecliptic
+const moonRel = (m, t) => positionAt(m, century(t));
 function moonHelio(m, t) {
-  const p = positionAt(byKey(m.of), century(t));
-  const r = moonRel(m, t);
-  return { x: p.x + r[0], y: p.y + r[1], z: p.z + r[2] };
+  const p = positionAt(byKey(m.of), century(t)), r = moonRel(m, t);
+  return { x: p.x + r.x, y: p.y + r.y, z: p.z + r.z };
 }
 
 /* ---------- textures, fetched only when you actually go and look ---------- */
@@ -1285,60 +1260,117 @@ function exaggeration(b, Rpx, depth) {
 
 const globeCv = document.createElement('canvas');
 const globeCtx = globeCv.getContext('2d');
+// Ray-traced against a real sphere rather than shaded as a flat disc, so that
+// closing right in gives the view from low orbit: the limb curves away and you
+// see less than a hemisphere, as you would.
 function drawGlobe(b, sx, sy, Rcss, depth, opt) {
   const mapped = !!ROT[b.key];
   const tex = mapped ? requestTex(b.key) : { state: 'unmapped' };
   const xf = (opt && opt.xf) || (v => v);
-  const F0 = mapped ? bodyFrame(b.key, state.t)
-                    : { x: [1,0,0], y: [0,1,0], z: [0,0,1] };
+  const F0 = mapped ? bodyFrame(b.key, state.t) : { x: [1,0,0], y: [0,1,0], z: [0,0,1] };
   const F = { x: xf(F0.x), y: xf(F0.y), z: xf(F0.z) };
   const sun = mapped ? xf(subSolar(b.key, state.t).dir)
                      : xf(nrm((p => [-p.x, -p.y, -p.z])(positionAt(b, century(state.t)))));
   const basis = (opt && opt.basis) || { right: CV.right, up: CV.up, fwd: CV.fwd };
-  const D = Math.max(1, Math.round(Rcss * DPR));
-  const size = D * 2;
-  if (globeCv.width !== size) { globeCv.width = size; globeCv.height = size; }
-  const out = globeCtx.createImageData(size, size);
-  const o = out.data;
+  const f = (opt && opt.f) || CV.f;
+
+  // Only the part of the disc that is actually on screen gets rendered, so the
+  // globe can be far larger than the window without allocating for it.
+  const x0 = Math.max(0, Math.floor(sx - Rcss)), x1 = Math.min(W, Math.ceil(sx + Rcss));
+  const y0 = Math.max(0, Math.floor(sy - Rcss)), y1 = Math.min(H, Math.ceil(sy + Rcss));
+  if (x1 <= x0 || y1 <= y0) return tex.state;
+  const gw = Math.max(1, Math.round((x1 - x0) * DPR));
+  const gh = Math.max(1, Math.round((y1 - y0) * DPR));
+  if (globeCv.width !== gw || globeCv.height !== gh) { globeCv.width = gw; globeCv.height = gh; }
+  const out = globeCtx.createImageData(gw, gh), o = out.data;
+
+  // implied distance to the centre, in body radii, from the drawn angular size
+  const sinT = Rcss / Math.hypot(f, Rcss);
+  const D = 1 / Math.max(1e-9, sinT);
+  globeDist = D;
   const rx = basis.right, uy = basis.up, fw = basis.fwd;
   const ready = tex.state === 'ready';
   const tw = ready ? tex.w : 0, th = ready ? tex.h : 0, tp = ready ? tex.px : null;
-  for (let py = 0; py < size; py++) {
-    const dy = (py - D + .5) / D;
-    for (let px = 0; px < size; px++) {
-      const dx = (px - D + .5) / D;
-      const q = dx*dx + dy*dy;
-      if (q > 1) continue;
-      const nz = Math.sqrt(1 - q);
-      // screen right / up / toward the viewer
-      const nx = rx[0]*dx + uy[0]*(-dy) - fw[0]*nz;
-      const ny = rx[1]*dx + uy[1]*(-dy) - fw[1]*nz;
-      const nzz = rx[2]*dx + uy[2]*(-dy) - fw[2]*nz;
-      let r = 150, g = 150, bl = 150;
-      if (!mapped) { const c = parseInt(b.col.slice(1), 16); r = c >> 16 & 255; g = c >> 8 & 255; bl = c & 255; }
+  let bc = 150, gc = 150, bl0 = 150;
+  if (!mapped) { const c = parseInt(b.col.slice(1), 16); bc = c >> 16 & 255; gc = c >> 8 & 255; bl0 = c & 255; }
+
+  for (let py = 0; py < gh; py++) {
+    const cy = y0 + (py + .5) / DPR, v = cy - sy;
+    for (let px = 0; px < gw; px++) {
+      const cx = x0 + (px + .5) / DPR, u = cx - sx;
+      const rr = Math.hypot(u, v);
+      if (rr > Rcss) continue;
+      let dx = u, dy = -v, dz = f;
+      const inv = 1 / Math.hypot(dx, dy, dz); dx *= inv; dy *= inv; dz *= inv;
+      const bq = D * dz, disc = bq * bq - (D * D - 1);
+      if (disc < 0) continue;
+      const tt = bq - Math.sqrt(disc);
+      const nx0 = tt * dx, ny0 = tt * dy, nz0 = tt * dz - D;    // unit normal
+      const nx = rx[0]*nx0 + uy[0]*ny0 + fw[0]*nz0;
+      const ny = rx[1]*nx0 + uy[1]*ny0 + fw[1]*nz0;
+      const nz = rx[2]*nx0 + uy[2]*ny0 + fw[2]*nz0;
+      let r = bc, g = gc, bb = bl0;
       if (ready) {
-        const lat = Math.asin(Math.max(-1, Math.min(1, nx*F.z[0] + ny*F.z[1] + nzz*F.z[2])));
-        const lon = Math.atan2(nx*F.y[0] + ny*F.y[1] + nzz*F.y[2],
-                               nx*F.x[0] + ny*F.x[1] + nzz*F.x[2]);
-        let u = (lon * R2D + 180) / 360; u -= Math.floor(u);
-        const v = (90 - lat * R2D) / 180;
-        const ti = ((Math.min(th - 1, (v * th) | 0) * tw) + Math.min(tw - 1, (u * tw) | 0)) * 4;
-        r = tp[ti]; g = tp[ti+1]; bl = tp[ti+2];
+        const lat = Math.asin(Math.max(-1, Math.min(1, nx*F.z[0] + ny*F.z[1] + nz*F.z[2])));
+        const lon = Math.atan2(nx*F.y[0] + ny*F.y[1] + nz*F.y[2],
+                               nx*F.x[0] + ny*F.x[1] + nz*F.x[2]);
+        let uu = (lon * R2D + 180) / 360; uu -= Math.floor(uu);
+        const vv = (90 - lat * R2D) / 180;
+        const ti = ((Math.min(th - 1, (vv * th) | 0) * tw) + Math.min(tw - 1, (uu * tw) | 0)) * 4;
+        r = tp[ti]; g = tp[ti+1]; bb = tp[ti+2];
       }
-      let lit = nx*sun[0] + ny*sun[1] + nzz*sun[2];
+      let lit = nx*sun[0] + ny*sun[1] + nz*sun[2];
       lit = lit <= 0 ? 0 : Math.pow(lit, .78);
-      const k = 0.035 + 0.965 * lit;                 // a little ambient, not pure black
-      const edge = Math.min(1, (1 - Math.sqrt(q)) * D * 0.9);   // antialias the limb
-      const i = (py * size + px) * 4;
-      o[i] = r * k; o[i+1] = g * k; o[i+2] = bl * k;
-      o[i+3] = 255 * edge;
+      const k = 0.035 + 0.965 * lit;
+      const i = (py * gw + px) * 4;
+      o[i] = r * k; o[i+1] = g * k; o[i+2] = bb * k;
+      o[i+3] = 255 * Math.min(1, (Rcss - rr) * DPR * .9 + .35);
     }
   }
   globeCtx.putImageData(out, 0, 0);
   if (b.ring) drawRings(b, F, sx, sy, Rcss, sun, false, basis);
-  ctx.drawImage(globeCv, sx - Rcss, sy - Rcss, Rcss * 2, Rcss * 2);
+  ctx.drawImage(globeCv, x0, y0, x1 - x0, y1 - y0);
   if (b.ring) drawRings(b, F, sx, sy, Rcss, sun, true, basis);
   return tex.state;
+}
+let globeDist = 1e9;      // implied camera distance in body radii, set by drawGlobe
+
+// A moon's offset is drawn at the same exaggeration as its planet, so the
+// system is internally to scale even though the whole thing is enlarged.
+function drawMoons(b, s, Rg, pp) {
+  const ms = moonsOf(b.key);
+  if (!ms.length) return;
+  const Rk = radiusOf(b.key);
+  const put = (rel) => {
+    const k = AU_KM / Rk * Rg;
+    return [ s[0] + (rel.x*CV.right[0] + rel.y*CV.right[1] + rel.z*CV.right[2]) * k,
+             s[1] - (rel.x*CV.up[0]    + rel.y*CV.up[1]    + rel.z*CV.up[2])    * k,
+                    (rel.x*CV.fwd[0]   + rel.y*CV.fwd[1]   + rel.z*CV.fwd[2])   * k ];
+  };
+  for (const m of ms) {
+    ctx.strokeStyle = hexA(m.col, .16); ctx.lineWidth = 1;
+    ctx.beginPath();
+    const P = Math.abs(360 / (m.L[1] / 36525));       // days per orbit
+    for (let i = 0; i <= 72; i++) {
+      const q = put(moonRel(m, state.t + (i / 72) * P * DAY));
+      i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]);
+    }
+    ctx.closePath(); ctx.stroke();
+  }
+  const drawn = ms.map(m => ({ m, q: put(moonRel(m, state.t)) }))
+                  .sort((a, c) => c.q[2] - a.q[2]);
+  for (const { m, q } of drawn) {
+    const r = Math.max(1.6, Math.min(Rg * 0.9, m.km / Rk * Rg));
+    if (q[2] > 0 && Math.hypot(q[0]-s[0], q[1]-s[1]) < Rg) continue;   // behind the planet
+    ctx.fillStyle = m.col;
+    ctx.beginPath(); ctx.arc(q[0], q[1], r, 0, TAU); ctx.fill();
+    if (Rg > 26) {
+      ctx.font = '500 9px Outfit, system-ui, sans-serif';
+      ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = hexA(m.col, .75);
+      ctx.fillText(m.name, q[0] + r + 4, q[1]);
+    }
+  }
 }
 
 // Saturn's rings, from measured radii rather than a picture: C 74.5-92.0,
@@ -1395,7 +1427,7 @@ function globeRadius(b) {
   if (state.mode !== 'orrery' || state.sel !== b || !radiusOf(b.key)) return 0;
   if (CAM.zoom < APPROACH_ZOOM) return 0;
   const grow = Math.pow(CAM.zoom / APPROACH_ZOOM, 1.05);
-  return Math.max(7, Math.min(Math.min(W, H) * 0.62, 7 * grow));
+  return Math.max(7, Math.min(Math.min(W, H) * 18, 7 * grow));
 }
 
 /* ---------- camera moves ---------- */
@@ -1532,6 +1564,10 @@ function geoDir(b, t) {
   return normv(eclToEq(p.x - e.x, p.y - e.y, p.z - e.z));
 }
 function normv(v) { const m = Math.hypot(v[0], v[1], v[2]); return [v[0] / m, v[1] / m, v[2] / m]; }
+function moonGeoDir(m, t) {
+  const e = positionAt(EARTH, century(t)), p = moonHelio(m, t);
+  return normv(eclToEq(p.x - e.x, p.y - e.y, p.z - e.z));
+}
 const SUN = { key: 'sun', name: 'Sun', col: '#ffd98a', r: 9, sky: true,
   blurb: 'The one that makes the rest of it visible.' };
 const MOON = { key: 'moon', name: 'Moon', col: '#dcdcd2', r: 8, sky: true,
@@ -1756,6 +1792,26 @@ function drawSky() {
     ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
     ctx.fillStyle = `rgba(255,255,255,${o.below ? .28 : .85})`;
     ctx.fillText(b.name.toUpperCase(), s[0] + (b === SUN ? 14 : b === MOON ? 13 : 8), s[1]);
+  }
+  // Jupiter's moons are a binocular target and their arrangement changes nightly,
+  // so they are drawn at their true angular offset once that is more than a dot.
+  for (const o of drawn) {
+    if (o.below || o.b === SUN || o.b === MOON) continue;
+    for (const m of moonsOf(o.b.key)) {
+      const d = moonGeoDir(m, state.t);
+      const s2 = skyProj(toHoriz(M, d[0], d[1], d[2]));
+      if (!s2) continue;
+      const sep = Math.hypot(s2[0] - o.s[0], s2[1] - o.s[1]);
+      if (sep < 3.5) continue;
+      ctx.fillStyle = hexA(m.col, .95);
+      ctx.beginPath(); ctx.arc(s2[0], s2[1], 1.7, 0, TAU); ctx.fill();
+      if (sep > 13 && state.view.fov < 1.6) {
+        ctx.font = '500 8px Outfit, system-ui, sans-serif';
+        ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+        ctx.fillStyle = hexA(m.col, .6);
+        ctx.fillText(m.name, s2[0] + 4, s2[1] - 5);
+      }
+    }
   }
   skyHits.length = 0;
   for (const o of drawn) skyHits.push({ b: o.b, x: o.s[0], y: o.s[1] });
@@ -2233,9 +2289,13 @@ function updateDetail() {
           real, the face is not. Turns once in ${u.rotH < 30 ? u.rotH.toFixed(2) + ' hours'
           : (u.rotH / 24).toFixed(2) + ' days'}. Radius ${u.km.toLocaleString()} km.`;
       }
+      const km = (globeDist - 1) * radiusOf(b.key);
+      const alt = globeDist > 40 ? '' :
+        `<div class="when">${km < 1e4 ? Math.round(km).toLocaleString() + ' km up'
+          : (km / 1000).toFixed(0) + ' thousand km up'} — ${globeDist.toFixed(2)} radii out</div>`;
       cell.appr.innerHTML = `<span class="lbl">Approach</span>
         <div class="when">${a.state === 'ready' || a.state === 'unmapped' ? '×' + fmtBig(x) + ' actual size'
-          : a.state === 'error' ? 'map unavailable' : 'loading map…'}</div>
+          : a.state === 'error' ? 'map unavailable' : 'loading map…'}</div>${alt}
         <div class="note">${note}</div>`;
     }
   }
@@ -2332,6 +2392,7 @@ function frame(now) {
     drawDrop(it.b, it.p, it.s);
     const gR = globeRadius(it.b);
     if (gR) {
+      drawMoons(it.b, it.s, gR, it.p);
       const st = drawGlobe(it.b, it.s[0], it.s[1], gR, it.s[2]);
       approachInfo = { b: it.b, R: gR, depth: it.s[2], state: st };
       hits.push({ b: it.b, x: it.s[0], y: it.s[1] });
@@ -2682,7 +2743,7 @@ function readHash() {
   const c = (p.get('c') || '').split(',').map(parseFloat);
   if (c.length === 3 && c.every(isFinite)) {
     CAM.az = c[0]; CAM.el = Math.max(-89, Math.min(89, c[1]));
-    CAM.zoom = Math.max(.35, Math.min(4000, c[2]));
+    CAM.zoom = Math.max(.35, Math.min(2e5, c[2]));
     for (const el of document.querySelectorAll('.vw'))
       el.classList.toggle('on', Math.abs(+el.dataset.el - CAM.el) < 0.5);
   }
@@ -2695,7 +2756,7 @@ function readHash() {
   if (v.length === 3 && v.every(isFinite)) {
     state.view.az = ((v[0] % 360) + 360) % 360;
     state.view.alt = Math.max(-25, Math.min(88, v[1]));
-    state.view.fov = Math.max(3, Math.min(150, v[2]));
+    state.view.fov = Math.max(0.25, Math.min(150, v[2]));
     $('fov').value = Math.round(state.view.fov);
   }
   const k = parseInt(p.get('k'), 10);
@@ -2797,12 +2858,12 @@ function pick(x, y) {
 cv.addEventListener('wheel', e => {
   e.preventDefault();
   if (state.mode === 'sky') {
-    state.view.fov = Math.max(3, Math.min(150, state.view.fov * Math.exp(e.deltaY * .0014)));
+    state.view.fov = Math.max(0.25, Math.min(150, state.view.fov * Math.exp(e.deltaY * .0014)));
     $('fov').value = Math.round(state.view.fov);
     needsDraw = true; queueHash();
   } else {
     CAM.fly = null;
-    CAM.zoom = Math.max(.35, Math.min(4000, CAM.zoom * Math.exp(-e.deltaY * .0016)));
+    CAM.zoom = Math.max(.35, Math.min(2e5, CAM.zoom * Math.exp(-e.deltaY * .0016)));
     needsDraw = true; queueHash();
   }
 }, { passive: false });
@@ -2815,12 +2876,12 @@ cv.addEventListener('touchmove', e => {
   const mx = (a.clientX + b.clientX) / 2, my = (a.clientY + b.clientY) / 2;
   if (pinch) {
     if (state.mode === 'sky') {
-      state.view.fov = Math.max(3, Math.min(150, state.view.fov * (pinch / d)));
+      state.view.fov = Math.max(0.25, Math.min(150, state.view.fov * (pinch / d)));
       $('fov').value = Math.round(state.view.fov);
       needsDraw = true;
     } else {
       CAM.fly = null;
-      CAM.zoom = Math.max(.35, Math.min(4000, CAM.zoom * (d / pinch)));
+      CAM.zoom = Math.max(.35, Math.min(2e5, CAM.zoom * (d / pinch)));
       needsDraw = true;
     }
   }
