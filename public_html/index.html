@@ -1473,15 +1473,31 @@ function drawMoons(b, s, Rg, pp) {
              s[1] - (rel.x*CV.up[0]    + rel.y*CV.up[1]    + rel.z*CV.up[2])    * k,
                     (rel.x*CV.fwd[0]   + rel.y*CV.fwd[1]   + rel.z*CV.fwd[2])   * k ];
   };
+  // project through the same camera the companions use, so an orbit sixty
+  // planet-radii wide lands where it belongs instead of off in the margins
+  const f = CV.f;
+  const D = 1 / Math.max(1e-9, Rg / Math.hypot(f, Rg));
+  const camDist = D * Rk;
+  const persp = rel => {
+    const rx = rel.x * AU_KM, ry = rel.y * AU_KM, rz = rel.z * AU_KM;
+    const vx = rx + CV.fwd[0]*camDist, vy = ry + CV.fwd[1]*camDist, vz = rz + CV.fwd[2]*camDist;
+    const z = vx*CV.fwd[0] + vy*CV.fwd[1] + vz*CV.fwd[2];
+    if (z <= 1) return null;
+    return [ s[0] + f * (vx*CV.right[0] + vy*CV.right[1] + vz*CV.right[2]) / z,
+             s[1] - f * (vx*CV.up[0]    + vy*CV.up[1]    + vz*CV.up[2])    / z ];
+  };
   for (const m of ms) {
-    ctx.strokeStyle = hexA(m.col, .16); ctx.lineWidth = 1;
+    ctx.strokeStyle = hexA(m.col, .18); ctx.lineWidth = 1;
     ctx.beginPath();
     const P = Math.abs(360 / (m.L[1] / 36525));       // days per orbit
-    for (let i = 0; i <= 72; i++) {
-      const q = put(moonRel(m, state.t + (i / 72) * P * DAY));
-      i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]);
+    let pen = false;
+    for (let i = 0; i <= 96; i++) {
+      const q = persp(moonRel(m, state.t + (i / 96) * P * DAY));
+      if (!q) { pen = false; continue; }
+      pen ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]);
+      pen = true;
     }
-    ctx.closePath(); ctx.stroke();
+    ctx.stroke();
   }
   const drawn = ms.map(m => ({ m, q: put(moonRel(m, state.t)) }))
                   .sort((a, c) => c.q[2] - a.q[2]);
@@ -1552,14 +1568,16 @@ function drawRings(b, F, sx, sy, Rcss, sun, front, basis) {
 }
 
 let approachInfo = null;
-const APPROACH_ZOOM = 4;
+const APPROACH_ZOOM = 2;
 // Only the body you have actually travelled to, and only once it would be
 // large enough to be worth drawing as a world.
 function globeRadius(b) {
   if (state.mode !== 'orrery' || state.sel !== b || !radiusOf(b.key)) return 0;
   if (CAM.zoom < APPROACH_ZOOM) return 0;
-  const grow = Math.pow(CAM.zoom / APPROACH_ZOOM, 1.05);
-  return Math.max(7, Math.min(Math.min(W, H) * 18, 7 * grow));
+  // keyed to zoom 4 = 7px so existing links frame identically; below that the
+  // globe may get small, which is what lets a wide moon system fit on screen
+  const grow = Math.pow(CAM.zoom / 4, 1.05);
+  return Math.max(1.5, Math.min(Math.min(W, H) * 18, 7 * grow));
 }
 
 /* ---------- camera moves ---------- */
@@ -1574,6 +1592,16 @@ function flyTo(b, ms = 900, zoomOverride) {
       // A moon's distance from the Sun says nothing about how to frame it.
       // Going to a moon means going TO it, close enough to be a world.
       zTo = 26;
+    } else if (moonsOf(b.key).length && radiusOf(b.key)) {
+      // A planet with moons is framed by its moons. Earth's is 59 Earth-radii
+      // out and Io's is 6, so no single zoom can serve both.
+      let far = 0;
+      for (const m of moonsOf(b.key)) {
+        const r = moonRel(m, state.t);
+        far = Math.max(far, Math.hypot(r.x, r.y, r.z) * AU_KM / radiusOf(b.key));
+      }
+      const want = 0.38 * Math.min(W, H) / Math.max(1, far);
+      zTo = Math.max(APPROACH_ZOOM, Math.min(30, 4 * Math.pow(want / 7, 1 / 1.05)));
     } else {
       const R = Math.max(sceneR(0.45), Math.hypot(...to));
       zTo = Math.max(1, Math.min(14, SCENE_MAX() / (R * 1.15)));
