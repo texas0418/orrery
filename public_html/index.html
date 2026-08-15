@@ -454,6 +454,7 @@ button.t.on{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,161
     <p><strong>The sizes are a lie, and the page says by how much.</strong> At any honest scale you never see a globe — Earth is far under a pixel from anywhere you would want to watch the solar system from. So the approach view enlarges, and prints the factor it is using: <em>×3.8 thousand actual size</em>, recalculated for your exact camera. Nothing else on the page is exaggerated, and this is the one place that needed saying out loud.</p>
     <p>Other things I have not pretended about. The bodies are drawn as spheres; Saturn is really flattened by a tenth and Jupiter by a sixteenth. Saturn's rings come from measured radii — the C, B and A rings with the Cassini division between the last two — but neither casts a shadow on the other, and edge-on they nearly vanish, which is true and is why they look so thin in 2026, a year after the plane crossing. Venus is its cloud deck, because that is all anyone has ever seen from outside. Uranus and Neptune are very nearly featureless in reality, so any banding on them is interpretation, not observation. The Moon's orientation omits the small libration terms and is good to a degree or two.</p>
     <p>The maps are fetched only when you actually go and look, one body at a time, from this same domain. The page still weighs about sixty kilobytes until you ask for a world.</p>
+    <p>You can keep going in until a planet fills the screen. Pluto and the four asteroids can be visited too, but there are no maps for them here — so they arrive as shape and sunlight only. The lit fraction is real and the size factor is real; the face is not, and the panel says so rather than inventing a surface.</p>
     <p>In <em>Sky</em>, the Moon is the exception that needs no exaggeration at all: it subtends half a degree, so narrow the field below about twelve degrees and it is simply drawn at the size it is, phase and all.</p>
 
     <h3>Controls</h3>
@@ -1097,6 +1098,16 @@ const ROT = {
   moon:   {a0:269.9949,a0T:0.0031, d0:66.5392,d0T:0.0130, W0:38.3213, Wd:13.17635815,km:1737.4}
 };
 const AU_KM = 149597870.7;
+// Bodies we have no map for. Radius and rotation are well measured; the pole is
+// not always, so these render as featureless lit spheres and claim no orientation.
+const UNMAPPED = {
+  pluto:  { km: 1188.3, rotH: 153.29 },
+  ceres:  { km:  469.7, rotH:   9.074 },
+  pallas: { km:  255.5, rotH:   7.813 },
+  juno:   { km:  123.3, rotH:   7.210 },
+  vesta:  { km:  262.7, rotH:   5.342 }
+};
+const radiusOf = k => ROT[k] ? ROT[k].km : UNMAPPED[k] ? UNMAPPED[k].km : 0;
 // equatorial -> ecliptic, the inverse of eclToEq
 const eqToEcl = (x, y, z) => [x, y * CE + z * SE, -y * SE + z * CE];
 
@@ -1160,18 +1171,21 @@ function exaggeration(b, Rpx, depth) {
   const T = century(state.t), p = positionAt(b, T);
   const r = Math.hypot(p.x, p.y, p.z);
   const scenePerAU = state.pow * Math.pow(r, state.pow - 1);
-  const truePx = (ROT[b.key].km / AU_KM) * scenePerAU * pxAt(depth);
+  const truePx = (radiusOf(b.key) / AU_KM) * scenePerAU * pxAt(depth);
   return truePx > 0 ? Rpx / truePx : Infinity;
 }
 
 const globeCv = document.createElement('canvas');
 const globeCtx = globeCv.getContext('2d');
 function drawGlobe(b, sx, sy, Rcss, depth, opt) {
-  const tex = requestTex(b.key);
+  const mapped = !!ROT[b.key];
+  const tex = mapped ? requestTex(b.key) : { state: 'unmapped' };
   const xf = (opt && opt.xf) || (v => v);
-  const F0 = bodyFrame(b.key, state.t);
+  const F0 = mapped ? bodyFrame(b.key, state.t)
+                    : { x: [1,0,0], y: [0,1,0], z: [0,0,1] };
   const F = { x: xf(F0.x), y: xf(F0.y), z: xf(F0.z) };
-  const sun = xf(subSolar(b.key, state.t).dir);
+  const sun = mapped ? xf(subSolar(b.key, state.t).dir)
+                     : xf(nrm((p => [-p.x, -p.y, -p.z])(positionAt(b, century(state.t)))));
   const basis = (opt && opt.basis) || { right: CV.right, up: CV.up, fwd: CV.fwd };
   const D = Math.max(1, Math.round(Rcss * DPR));
   const size = D * 2;
@@ -1193,6 +1207,7 @@ function drawGlobe(b, sx, sy, Rcss, depth, opt) {
       const ny = rx[1]*dx + uy[1]*(-dy) - fw[1]*nz;
       const nzz = rx[2]*dx + uy[2]*(-dy) - fw[2]*nz;
       let r = 150, g = 150, bl = 150;
+      if (!mapped) { const c = parseInt(b.col.slice(1), 16); r = c >> 16 & 255; g = c >> 8 & 255; bl = c & 255; }
       if (ready) {
         const lat = Math.asin(Math.max(-1, Math.min(1, nx*F.z[0] + ny*F.z[1] + nzz*F.z[2])));
         const lon = Math.atan2(nx*F.y[0] + ny*F.y[1] + nzz*F.y[2],
@@ -1269,10 +1284,10 @@ const APPROACH_ZOOM = 4;
 // Only the body you have actually travelled to, and only once it would be
 // large enough to be worth drawing as a world.
 function globeRadius(b) {
-  if (state.mode !== 'orrery' || state.sel !== b || !ROT[b.key]) return 0;
+  if (state.mode !== 'orrery' || state.sel !== b || !radiusOf(b.key)) return 0;
   if (CAM.zoom < APPROACH_ZOOM) return 0;
-  const grow = Math.pow(CAM.zoom / APPROACH_ZOOM, 1.35);
-  return Math.max(7, Math.min(Math.min(W, H) * 0.34, 7 * grow));
+  const grow = Math.pow(CAM.zoom / APPROACH_ZOOM, 1.05);
+  return Math.max(7, Math.min(Math.min(W, H) * 0.62, 7 * grow));
 }
 
 /* ---------- camera moves ---------- */
@@ -2095,15 +2110,25 @@ function updateDetail() {
     else {
       cell.appr.hidden = false;
       const x = exaggeration(b, a.R, a.depth);
-      const ss = subSolar(b.key, state.t);
-      const per = Math.abs(360 / ROT[b.key].Wd);
-      cell.appr.innerHTML = `<span class="lbl">Approach</span>
-        <div class="when">${a.state === 'ready' ? '×' + fmtBig(x) + ' actual size'
-          : a.state === 'error' ? 'map unavailable' : 'loading map…'}</div>
-        <div class="note">Sun overhead at ${Math.abs(ss.lat).toFixed(1)}°${ss.lat < 0 ? 'S' : 'N'},
+      const mapped = !!ROT[b.key];
+      let note;
+      if (mapped) {
+        const ss = subSolar(b.key, state.t);
+        const per = Math.abs(360 / ROT[b.key].Wd);
+        note = `Sun overhead at ${Math.abs(ss.lat).toFixed(1)}°${ss.lat < 0 ? 'S' : 'N'},
           ${Math.abs(ss.lon).toFixed(1)}°${ss.lon < 0 ? 'W' : 'E'}. Turns once in
           ${per < 1.2 ? (per * 24).toFixed(2) + ' hours' : per.toFixed(2) + ' days'}${ROT[b.key].Wd < 0 ? ', backwards' : ''}.
-          Radius ${ROT[b.key].km.toLocaleString()} km.</div>`;
+          Radius ${ROT[b.key].km.toLocaleString()} km.`;
+      } else {
+        const u = UNMAPPED[b.key];
+        note = `No surface map, so this is shape and sunlight only — the lit fraction is
+          real, the face is not. Turns once in ${u.rotH < 30 ? u.rotH.toFixed(2) + ' hours'
+          : (u.rotH / 24).toFixed(2) + ' days'}. Radius ${u.km.toLocaleString()} km.`;
+      }
+      cell.appr.innerHTML = `<span class="lbl">Approach</span>
+        <div class="when">${a.state === 'ready' || a.state === 'unmapped' ? '×' + fmtBig(x) + ' actual size'
+          : a.state === 'error' ? 'map unavailable' : 'loading map…'}</div>
+        <div class="note">${note}</div>`;
     }
   }
   if (evtCache.key !== b.key || Math.abs(state.t - evtCache.at) > DAY / 2) {
@@ -2144,7 +2169,7 @@ function frame(now) {
   }
   if (CAM.fly) stepFly(now);
   else if (state.mode === 'orrery' && state.sel && !state.sel.sky &&
-           ROT[state.sel.key] && CAM.zoom >= APPROACH_ZOOM) {
+           radiusOf(state.sel.key) && CAM.zoom >= APPROACH_ZOOM) {
     const q = positionAt(state.sel, century(state.t));
     const to = toScene(q.x, q.y, q.z);
     if (Math.hypot(to[0]-CAM.tx, to[1]-CAM.ty, to[2]-CAM.tz) > 1e-9) {
@@ -2396,9 +2421,9 @@ for (const el of document.querySelectorAll('.vw')) el.onclick = () => {
 $('flySel').onclick = () => flyTo(state.sel && !state.sel.sky ? state.sel : null);
 $('approachBtn').onclick = () => {
   const b = state.sel;
-  if (!b || b.sky || !ROT[b.key]) { $('approachBtn').textContent = 'Pick a planet'; 
+  if (!b || b.sky || !radiusOf(b.key)) { $('approachBtn').textContent = 'Pick a body'; 
     setTimeout(() => $('approachBtn').textContent = 'Approach', 1400); return; }
-  requestTex(b.key);
+  if (ROT[b.key]) requestTex(b.key);
   flyTo(b, 1400, 26);
 };
 $('camReset').onclick = () => {
@@ -2549,7 +2574,7 @@ function readHash() {
   const c = (p.get('c') || '').split(',').map(parseFloat);
   if (c.length === 3 && c.every(isFinite)) {
     CAM.az = c[0]; CAM.el = Math.max(-89, Math.min(89, c[1]));
-    CAM.zoom = Math.max(.35, Math.min(60, c[2]));
+    CAM.zoom = Math.max(.35, Math.min(4000, c[2]));
     for (const el of document.querySelectorAll('.vw'))
       el.classList.toggle('on', Math.abs(+el.dataset.el - CAM.el) < 0.5);
   }
@@ -2573,7 +2598,7 @@ function readHash() {
   if (p.get('m') === 'sky') setMode('sky');
   const b = [...BODIES, SUN, MOON].find(x => x.key === p.get('b'));
   if (b) select(b);
-  if (b && !b.sky && ROT[b.key] && CAM.zoom >= APPROACH_ZOOM) {
+  if (b && !b.sky && radiusOf(b.key) && CAM.zoom >= APPROACH_ZOOM) {
     const q = positionAt(b, century(state.t));
     const to = toScene(q.x, q.y, q.z);
     CAM.tx = to[0]; CAM.ty = to[1]; CAM.tz = to[2];
@@ -2669,7 +2694,7 @@ cv.addEventListener('wheel', e => {
     needsDraw = true; queueHash();
   } else {
     CAM.fly = null;
-    CAM.zoom = Math.max(.35, Math.min(60, CAM.zoom * Math.exp(-e.deltaY * .0016)));
+    CAM.zoom = Math.max(.35, Math.min(4000, CAM.zoom * Math.exp(-e.deltaY * .0016)));
     needsDraw = true; queueHash();
   }
 }, { passive: false });
@@ -2687,7 +2712,7 @@ cv.addEventListener('touchmove', e => {
       needsDraw = true;
     } else {
       CAM.fly = null;
-      CAM.zoom = Math.max(.35, Math.min(60, CAM.zoom * (d / pinch)));
+      CAM.zoom = Math.max(.35, Math.min(4000, CAM.zoom * (d / pinch)));
       needsDraw = true;
     }
   }
