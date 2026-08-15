@@ -1,7 +1,7 @@
 # Orrery — handoff, 2026-08-15
 
 **Live:** https://orrery.simonbuilds.app · **Repo:** github.com/texas0418/orrery
-**Deployed build: 196,780 bytes.** Live, disk and the `/orrery` redirect all agree.
+**Deployed build: 197,817 bytes.** Live, disk and the `/orrery` redirect all agree.
 
 ---
 
@@ -66,41 +66,57 @@ selected body, in that body's own radii, 0 when you are not at one.
 - `inApproach()` is `CAM.alt > 1.001`, and is the only test for "at a body".
   `CAM.zoom` no longer decides it.
 - `globeRadius()` is `camF() / sqrt(alt² - 1)` — the drawn radius *is* the
-  altitude, and `drawCompanions` / `drawMoonOrbits` invert it to recover the
-  camera distance. Change one and the other follows for free.
-- `frameAlt(b)` is where you arrive: `altFor(systemRadii(b), .62)` for a planet
-  with moons — far enough to hold the widest orbit, sampled over a whole
-  revolution — or `approachAlt(b)` otherwise. `approachAlt` is 2.61 radii, except
-  for Saturn, where the ring outer edge sets it (6.6) or the rings would be cut
-  off. `altFor(radii, frac)` = `radii / (frac · tan(HALF_FOV))`.
+  altitude. But **`camKm(b)` is the only source of the camera distance**, and it
+  reads `CAM.alt`. Never invert the drawn radius to get it back: the globe has a
+  1.5 px floor so a body still shows from far out, and inverting a floored
+  radius places every companion as though you were three times closer. That bug
+  put Saturn 28,000 px off screen from Tethys, and it is invisible until you
+  measure, because it only bites past `camF()/1.5` ≈ 480 radii.
+- **Three altitudes, and the difference between them is the design.** `worldAlt()`
+  (7.0 radii) is where clicking a body puts you: the body as a world, with room
+  around it. `approachAlt(b)` (2.61, or 6.6 for Saturn so its rings are not cut
+  off) is where the Approach button puts you. `outerAlt(b)` is the outer edge:
+  `altFor(systemRadii(b), .45)` for a planet, or **three times the separation**
+  for a moon, which is what puts its planet inside 18° of the axis *whichever
+  way you are facing* — where the planet appears is a question of facing, not
+  distance, and it lies within `atan(S/alt)` of the moon. `altFor(radii, frac)`
+  = `radii / (frac · tan(HALF_FOV))`.
+- **The wheel enters and leaves at the same altitude, `outerAlt`.** That is the
+  whole reason it exists as a separate number. Entry and exit are instant and
+  identical, so a scroll that carries on through the boundary carries on going;
+  only the scene zoom changes across it. Set entry anywhere else and scrolling
+  back in teleports — which is exactly what Simon reported on 15 Aug, when
+  re-entry jumped to the close view and the Moon filled the screen again.
 - Scene zoom during approach is a constant, `APPROACH_SCENE = 60`: enough that
   nothing else is in the cone. It is no longer load-bearing.
-- Wheel/pinch scale `alt` when in approach and `zoom` otherwise. Crossing
-  `APPROACH_ZOOM` (4) with a body selected hands over to `alt` and eases zoom in;
-  passing `exitAlt()` hands back. Entry and exit are 500 ms flights, and exit
-  drops zoom to `APPROACH_ZOOM` first so a scroll that carries on through the
-  handover carries on out instead of stranding the camera at 60× over nothing.
+- Wheel/pinch scale `alt` when in approach and `zoom` otherwise, crossing at
+  `APPROACH_ZOOM` (4) going in and `outerAlt(b)` coming out. Deselecting is a
+  different thing — that is *leaving*, and it flies the whole way out to zoom 1.
 - `alt` rides in the hash as `h=`. A link from before the split (zoom ≥ 4, no
   `h=`) is converted on read — it meant "at this body", so it lands there.
 
 **Consequences worth knowing before you "improve" any of them:**
 
-- **Fly to** now frames a planet's whole system; **Approach** goes inside it to
-  the planet. Two different views, and the About says so.
-- Framing Earth's system means Earth is **2.5 px** across. That is not a bug —
-  the Moon's orbit is 59.5 radii out, and you cannot have both. Saturn framed by
-  Iapetus is the same.
+- **Clicking anything gives you the world** — Simon's call, 15 Aug, and the
+  right one. The system view is what you scroll out to, and it is exactly where
+  the boundary sits, so pulling back always ends on it.
+- **A moon's planet is not somewhere you can arrive.** To have both in frame the
+  camera must be roughly opposite the planet — which is the moon's *anti-planet*
+  hemisphere, the one Voyager never charted for half of them. So the page does
+  not aim the camera for you. Pulling back gathers the planet in instead, and
+  the About says so.
 - Below 4 px a globe is drawn in the body's own colour and **its map is never
   fetched** — a megabyte to colour nine pixels. Zoom in and it loads.
 - `drawMoons` is now `drawMoonOrbits` and draws *only* paths. The moons
   themselves were always also drawn by `drawCompanions`, in a different
   projection — two labels, and a moon that could sit off its own orbit line.
 
-**Verified:** all 33 bodies flown to, at 1280×720 and 375×812; every outermost
-moon lands ~166 px out against a `min(W,H)/2` limit; no unrelated planet in
-frame except Pallas from Vesta, which really is in that direction. Entry, exit,
-sky round-trip, deselect, old-style links, and the 33-body sweep are in the
-session log; there are no tests in the repo to run (see §5.3).
+**Verified:** all 33 bodies, at 1280×720 and 375×812. Every one arrives at
+7.02 radii on a click; every one leaves and re-enters at the identical altitude
+with no jump; and at that boundary everything each body belongs to is in frame —
+planets' moon systems 28–119 px out, and every moon's planet 83–205 px, against
+a `min(W,H)/2` limit of 360. Entry, exit, sky round-trip, deselect and old-style
+links are in the session log; there are no tests in the repo (see §5.3).
 
 ---
 
