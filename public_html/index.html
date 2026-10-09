@@ -446,7 +446,7 @@ button.t.on{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,161
     <p>The <em>Sky</em> switch keeps the same positions and asks a different question: not where the planets are, but where you would have to look. The heliocentric vectors get rotated into equatorial coordinates, precessed from J2000 to the date on the clock, and turned into altitude and azimuth for wherever you're standing. Sunrise and sunset come out within a minute of published tables, which is the check I used to know the chain was right.</p>
     <p>Your location is guessed from your browser's time zone, which is a city-sized guess and needs no permission. <strong>Click the place name at the top of the Tonight panel to stand somewhere else</strong> — search a hundred and forty cities, jump to the poles or the equator, or type coordinates for anywhere on Earth. You can also hand over your real position; that one asks the browser, and the answer never leaves this page. There is nowhere for it to go: no server, no request, no storage.</p>
     <p>The far latitudes are worth the trip. Put yourself in Svalbard in June and the Sun circles overhead without setting all day; stand at the South Pole in the same week and it sits at −23° below the horizon and stays there, because at the poles a body's altitude is simply its declination and nothing rises or sets at all.</p>
-    <p>The stars are real, 1,637 of them down to magnitude 5, roughly what a good dark sky gives you. The Moon comes from an abridged lunar theory that is good to a few arcminutes — enough to put it in the right place among the stars and to draw its phase, not enough to predict an occultation.</p>
+    <p>The stars are real, 1,637 of them down to magnitude 5, roughly what a good dark sky gives you. The Moon comes from an abridged lunar theory that is good to a few arcminutes — enough to put it in the right place among the stars and to draw its phase, not enough to predict an occultation. Its coordinates come out referred to the equinox of date and are precessed back to J2000 before they meet anything else here, which matters more than it sounds: leaving that out put the Moon two thirds of its own width off in 2027, and over a degree and a half at the 1800 end of the timeline.</p>
 
     <h3>The loop</h3>
     <p>This is the thing I built the mode for. Select a planet, leave the trail on, and you get its own position plotted for every few days over the months either side — held against the stars, because that's the frame it's moving through.</p>
@@ -456,9 +456,12 @@ button.t.on{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,161
     <p>Select a planet and press <em>Approach</em>. The camera flies in and the marker becomes a world, mapped with real spacecraft imagery.</p>
     <p>What is computed rather than drawn: the orientation, from the IAU's published pole direction and prime-meridian rate for each body, so the face turned towards you is the face that was turned that way on the date on the clock; and the lighting, from the true Sun direction, so the terminator falls where it falls and the panel tells you the latitude and longitude the Sun is standing over. Set Earth to noon UT and Africa is centred under the Sun. Advance twelve hours and the Pacific is.</p>
     <p><strong>The sizes are a lie, and the page says by how much.</strong> At any honest scale you never see a globe — Earth is far under a pixel from anywhere you would want to watch the solar system from. So the approach view enlarges, and prints the factor it is using: <em>×3.8 thousand actual size</em>, recalculated for your exact camera. Nothing else on the page is exaggerated, and this is the one place that needed saying out loud.</p>
-    <p>Other things I have not pretended about. The bodies are drawn as spheres; Saturn is really flattened by a tenth and Jupiter by a sixteenth. Saturn's rings come from measured radii — the C, B and A rings with the Cassini division between the last two — but neither casts a shadow on the other, and edge-on they nearly vanish, which is true and is why they look so thin in 2026, a year after the plane crossing. Venus is its cloud deck, because that is all anyone has ever seen from outside. Uranus and Neptune are very nearly featureless in reality, so any banding on them is interpretation, not observation. The Moon's orientation omits the small libration terms and is good to a degree or two.</p>
+    <p>Other things I have not pretended about. The bodies are drawn as spheres; Saturn is really flattened by a tenth and Jupiter by a sixteenth. Saturn's rings come from measured radii — the C, B and A rings with the Cassini division between the last two — and each now casts its shadow on the other: the rings lay a banded shadow across the planet, dark where the B ring is and bright in the Cassini gap, and the planet cuts its own wedge out of the rings. Edge-on they nearly vanish, which is true and is why they look so thin in 2026, a year after the plane crossing. Venus is its cloud deck, because that is all anyone has ever seen from outside. Uranus and Neptune are very nearly featureless in reality, so any banding on them is interpretation, not observation. The Moon no longer keeps a perfectly fixed face: its orientation is the IAU's published lunar model, librations and all, so it rocks about eight degrees east and west and nods nearly seven north and south over a month. Run it for a full nodal cycle and 58.1 per cent of the surface comes into view at some point. The figure usually quoted is 59, and the difference is the extra degree you get from standing on the Earth's surface rather than at its centre, which this does not model.</p>
     <p>The maps are fetched only when you actually go and look, one body at a time, from this same domain. The page still weighs about sixty kilobytes until you ask for a world.</p>
     <p>You can keep going in until you are in low orbit. The globe is ray-traced against a real sphere rather than shaded as a flat disc, so as you close in the limb curves away and you see less than a hemisphere, exactly as you would from a few hundred kilometres up. The panel reports the implied altitude and how many radii out you are.</p>
+    <p><strong>Shadows are worked out rather than drawn.</strong> For every pixel of a lit surface the page asks how much of the Sun's disc is covered from that point on the ground, so an umbra is simply where the answer is all of it and a penumbra is where the answer is some. Nothing else is needed to get an eclipse. Go to Earth on 2 August 2027 and the Moon's umbra is a black spot 210 km across crawling over southern Egypt, inside a soft penumbra a few thousand kilometres wide; go to Jupiter and the Galilean moons drop hard-edged dots on the cloud tops, hard-edged because from Jupiter the Sun is only a tenth of a degree wide. The same calculation puts Earth's shadow on the Moon during a lunar eclipse.</p>
+    <p><strong>How accurate, measured against NASA's published paths.</strong> On the centre line of the 2027 eclipse the page is 137 to 143 km out, and on the 2024 one 226 to 239 km, which is one to two arcminutes of lunar position and is the abridged theory doing what it says. Greatest eclipse comes out 26 seconds early in 2024 and 130 seconds late in 2027; most of that last figure is that the page treats the clock as dynamical time and does not model Delta T, about 73 seconds in 2027. So: good enough to watch the shadow cross a country, not good enough to plan a trip by. Jupiter's moons are better placed than that in angle but slower on the clock, so a shadow transit is right to under a minute for Io and about seven for Ganymede.</p>
+    <p><strong>Earthshine.</strong> The night side of a moon is not black, because its planet is up there lit by the same Sun. A full Earth sends our Moon about one twelve-thousandth of direct sunlight, which is far too little to survive next to a sunlit crescent at any honest exposure, so the page lifts it to about a tenth of full brightness to make it visible at all. The way it changes is real: it follows the Earth's phase as seen from the Moon and the angle the light lands at, which is why it is strongest at a thin crescent, when the Earth above is nearly full. The brightness itself is a decision, and this is it being declared.</p>
     <p> Pluto and the four asteroids can be visited too, but there are no maps for them here — so they arrive as shape and sunlight only. The lit fraction is real and the size factor is real; the face is not, and the panel says so rather than inventing a surface.</p>
     <p>In <em>Sky</em>, the Moon is the exception that needs no exaggeration at all: it subtends half a degree, so narrow the field below about twelve degrees and it is simply drawn at the size it is, phase and all.</p>
 
@@ -497,6 +500,13 @@ button.t.on{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,161
       <li><a href="https://stars.chromeexperiments.com/">100,000 Stars</a> — the solar neighbourhood in three dimensions, and lovely for its own sake.</li>
       <li><a href="https://worldwidetelescope.org/">WorldWide Telescope</a> — real survey imagery of the actual sky rather than a simulation of it.</li>
       <li><a href="https://www.solarsystemscope.com/">Solar System Scope</a> — a polished 3D model, and the source of the surface maps used here.</li>
+    </ul>
+
+    <h3 data-toc="Nearby">Other things on this domain</h3>
+    <p>Same arrangement as this one. Simon hands over a subdomain and I build whatever I would want to have open in a tab. None of them are products, none of them want anything from you, and none of them will ask you to sign up for anything.</p>
+    <ul>
+      <li><a href="https://cartwright.simonbuilds.app/">The Cartwright Sentence Engine</a> — a 1953 machine for composing weather forecasts, built for real. Deterministic, so the same inputs give you the same strip of type every time, which was most of the work.</li>
+      <li><a href="https://atlas.simonbuilds.app/">Wireframe Atlas</a> — the United States drawn as wireframe, one state at a time, and no state goes up until it is finished.</li>
     </ul>
 
     <h3 data-toc="Reading it">If you can't see the screen</h3>
@@ -779,6 +789,14 @@ function moonGeo(t) {
        - 0.046 * Math.sin(Mm + F - 2 * D) + 0.033 * Math.sin(F + 2 * D)
        + 0.017 * Math.sin(2 * Mm + F);
   r += -0.58 * Math.cos(Mm - 2 * D) - 0.46 * Math.cos(2 * D);
+
+  // Schlyter's series is referred to the ecliptic and equinox OF DATE. Every
+  // other position on this page is J2000, so the longitude has to come back by
+  // the general precession accumulated since then, IAU 1976 to match the sky
+  // chain. Leaving this out is what put the Moon 0.39 degrees out of place in
+  // 2027, and 1.7 degrees at the 1800 end of the timeline: most of a lunar
+  // diameter, and 2,400 km of error in where its shadow falls.
+  lon -= (5029.0966 * century(t) + 1.11113 * century(t) * century(t)) / 3600;
 
   const lo = lon * D2R, la = lat * D2R;
   return { x: Math.cos(la) * Math.cos(lo), y: Math.cos(la) * Math.sin(lo), z: Math.sin(la),
@@ -1155,12 +1173,42 @@ const helioOf = (b, t) => b.moon ? moonHelio(b, t) : positionAt(b, century(t));
 // equatorial -> ecliptic, the inverse of eclToEq
 const eqToEcl = (x, y, z) => [x, y * CE + z * SE, -y * SE + z * CE];
 
+// The Moon is the one body here whose orientation is not a steady spin. It
+// rocks. Its rotation is uniform but its orbit is not, so the face it turns to
+// us swings about eight degrees east and west; and its axis is tilted to its
+// orbit, so it nods nearly seven degrees north and south. That is libration,
+// and it is the reason 59 per cent of the surface has ever been seen from Earth
+// rather than half. The series is the IAU 2015 report's, the same source as the
+// planet poles above, E1 to E13.
+function lunarRot(t) {
+  const d = jd(t) - J2000, T = d / 36525;
+  const s = x => Math.sin(x * D2R), c = x => Math.cos(x * D2R);
+  const E1  = 125.045 - 0.0529921 * d, E2  = 250.089 - 0.1059842 * d,
+        E3  = 260.008 + 13.0120009 * d, E4  = 176.625 + 13.3407154 * d,
+        E5  = 357.529 + 0.9856003 * d,  E6  = 311.589 + 26.4057084 * d,
+        E7  = 134.963 + 13.0649930 * d, E8  = 276.617 + 0.3287146 * d,
+        E9  = 34.226 + 1.7484877 * d,   E10 = 15.134 - 0.1589763 * d,
+        E11 = 119.743 + 0.0036096 * d,  E12 = 239.961 + 0.1643573 * d,
+        E13 = 25.053 + 12.9590088 * d;
+  return {
+    a0: 269.9949 + 0.0031 * T - 3.8787 * s(E1) - 0.1204 * s(E2) + 0.0700 * s(E3)
+        - 0.0172 * s(E4) + 0.0072 * s(E6) - 0.0052 * s(E10) + 0.0043 * s(E13),
+    d0: 66.5392 + 0.0130 * T + 1.5419 * c(E1) + 0.0239 * c(E2) - 0.0278 * c(E3)
+        + 0.0068 * c(E4) - 0.0029 * c(E6) + 0.0009 * c(E7) + 0.0008 * c(E10) - 0.0009 * c(E13),
+    W:  38.3213 + 13.17635815 * d - 1.4e-12 * d * d + 3.5610 * s(E1) + 0.1208 * s(E2)
+        - 0.0642 * s(E3) + 0.0158 * s(E4) + 0.0252 * s(E5) - 0.0066 * s(E6) - 0.0047 * s(E7)
+        - 0.0046 * s(E8) + 0.0028 * s(E9) + 0.0052 * s(E10) + 0.0040 * s(E11)
+        + 0.0019 * s(E12) - 0.0044 * s(E13)
+  };
+}
 // Body-fixed axes, returned in the J2000 ECLIPTIC frame the orrery works in.
 function bodyFrame(key, t) {
   const R = ROT[key];
   const T = century(t), d = jd(t) - J2000;
-  const a0 = (R.a0 + R.a0T * T) * D2R, d0 = (R.d0 + R.d0T * T) * D2R;
-  const W = (((R.W0 + R.Wd * d) % 360) + 360) % 360 * D2R;
+  const L = key === 'moon' ? lunarRot(t)
+                           : { a0: R.a0 + R.a0T * T, d0: R.d0 + R.d0T * T, W: R.W0 + R.Wd * d };
+  const a0 = L.a0 * D2R, d0 = L.d0 * D2R;
+  const W = (((L.W % 360) + 360) % 360) * D2R;
   const n = [Math.cos(d0)*Math.cos(a0), Math.cos(d0)*Math.sin(a0), Math.sin(d0)];
   const q = [-Math.sin(a0), Math.cos(a0), 0];        // node of the body equator on the ICRF equator
   const nq = cross(n, q);
@@ -1288,6 +1336,8 @@ const moonsOf = k => MOONS.filter(m => m.of === k);
 // convention for these bodies: longitude zero points at the primary. So the
 // orientation follows from the orbit itself, with no rotation table needed.
 function moonFrame(m, t) {
+  // ours is the one with a published orientation of its own, librations and all
+  if (m.key === 'luna') return bodyFrame('moon', t);
   const r = moonRel(m, t), q = moonRel(m, t + 600e3);   // ten minutes on, for the normal
   const rv = [r.x, r.y, r.z];
   const z = nrm(cross(rv, [q.x - r.x, q.y - r.y, q.z - r.z]));
@@ -1345,6 +1395,39 @@ const globeCtx = globeCv.getContext('2d');
 // Ray-traced against a real sphere rather than shaded as a flat disc, so that
 // closing right in gives the view from low orbit: the limb curves away and you
 // see less than a hemisphere, as you would.
+// Reflectivity, for working out what a planet sends back to its moons.
+const ALBEDO = { earth:.31, mars:.17, jupiter:.52, saturn:.47,
+                 uranus:.51, neptune:.41, pluto:.52 };
+// Earthshine is lifted to 12% of full sunlight on screen so that it shows at
+// all. Everything else scales from that one decision.
+const SHINE_SHOW = 0.12;
+const SHINE_REF = Math.pow(0.31 * Math.pow(6371 / 384400, 2), .2);
+const SUN_KM = 695700;        // the Sun is a disc, not a point, which is the whole reason
+                              // there is a penumbra at all
+// Anything that can come between this body and the Sun: its moons, or, if it is
+// itself a moon, its planet and its siblings. Kilometres from the body's own
+// centre, in the ecliptic frame the surface normals are built in.
+function occultersOf(b, t) {
+  const out = [], add = (o, x, y, z) => {
+    const R = radiusOf(o.key);
+    if (R) out.push({ x: x * AU_KM, y: y * AU_KM, z: z * AU_KM, r: R });
+  };
+  if (b.moon) {
+    const me = moonRel(b, t);
+    const p = byKey(b.of);
+    if (p) add(p, -me.x, -me.y, -me.z);
+    for (const s of moonsOf(b.of)) if (s !== b) {
+      const q = moonRel(s, t);
+      add(s, q.x - me.x, q.y - me.y, q.z - me.z);
+    }
+  } else {
+    for (const m of moonsOf(b.key)) {
+      const q = moonRel(m, t);
+      add(m, q.x, q.y, q.z);
+    }
+  }
+  return out;
+}
 function drawGlobe(b, sx, sy, Rcss, depth, opt) {
   // Framing a whole moon system can leave the planet a few pixels across, and a
   // surface map is a megabyte to decide the colour of nine pixels. Under four,
@@ -1363,6 +1446,113 @@ function drawGlobe(b, sx, sy, Rcss, depth, opt) {
   const sun = xf(nrm((p => [-p.x, -p.y, -p.z])(helioOf(b, state.t))));
   const basis = (opt && opt.basis) || { right: CV.right, up: CV.up, fwd: CV.fwd };
   const f = (opt && opt.f) || CV.f;
+
+  /* ---------- eclipses ----------
+     Not drawn. Worked out, per pixel, from the only thing that decides it: how
+     much of the Sun's disc the occulter covers as seen from that point on the
+     ground. Umbra is where that reaches all of it and penumbra is where it
+     reaches some, which is what those two words mean. A moon's shadow on its
+     planet and a planet's shadow on its moon are the same calculation. */
+  const Rsurf = radiusOf(b.key) || 0;
+  const pSun = helioOf(b, state.t);
+  const dSun = Math.hypot(pSun.x, pSun.y, pSun.z) * AU_KM;
+  const SH = [];
+  if (Rsurf && Rcss >= 6) for (const o of occultersOf(b, state.t)) {
+    const q = xf([o.x, o.y, o.z]);
+    // the shadow runs along the line from the Sun through the occulter
+    const wx = q[0] - sun[0] * dSun, wy = q[1] - sun[1] * dSun, wz = q[2] - sun[2] * dSun;
+    const dQS = Math.hypot(wx, wy, wz);
+    if (!dQS) continue;
+    const ax = wx / dQS, ay = wy / dQS, az = wz / dQS;
+    const L0 = -(q[0] * ax + q[1] * ay + q[2] * az);     // us, measured along that line
+    if (L0 <= 0) continue;                               // it is behind us, casting away
+    const spread = (SUN_KM + o.r) / dQS;                 // the penumbra widens at this rate
+    const m2 = q[0]*q[0] + q[1]*q[1] + q[2]*q[2] - L0 * L0;
+    const reach = o.r + (L0 + Rsurf) * spread + Rsurf;
+    if (m2 > reach * reach) continue;    // the cone cannot touch this body today at all
+    SH.push({ qx: q[0], qy: q[1], qz: q[2], r: o.r, ax, ay, az, spread });
+  }
+  /* The rings lie between this surface and the Sun for half of Saturn's year,
+     and they are not opaque: each band lets a fraction through. Follow the ray
+     out to the ring plane, see which band it crosses, and dim by what that band
+     stops. The slant matters, so the depth is divided by how steeply the ray
+     goes through: near equinox the light crawls the long way through the rings
+     and the shadow is a thin hard line, which is exactly when it is thinnest
+     and darkest in a photograph. */
+  const ringShade = (b.ring && ROT[b.key]) ? (px, py, pz) => {
+    const h  = px*F.z[0] + py*F.z[1] + pz*F.z[2];       // height above the ring plane
+    const sz = sun[0]*F.z[0] + sun[1]*F.z[1] + sun[2]*F.z[2];
+    if (!sz) return 1;
+    const tt = -h / sz;
+    if (tt <= 0) return 1;                              // the ray climbs away from the plane
+    const qx = px + sun[0]*tt, qy = py + sun[1]*tt, qz = pz + sun[2]*tt;
+    const rk = Math.hypot(qx, qy, qz) / 1000;           // thousand km from the centre
+    for (let i = 0; i < RING_BANDS.length; i++) {
+      const band = RING_BANDS[i];
+      if (rk < band[0] || rk >= band[1]) continue;
+      return Math.pow(1 - band[2], 1 / Math.max(.05, Math.abs(sz)));
+    }
+    return 1;                                           // through a gap, or past the edge
+  } : null;
+  /* Planetshine. The night side of a moon is not black: its planet hangs over
+     it, lit by the same Sun, and that light arrives. Our Moon gets about one
+     twelve-thousandth of direct sunlight from a full Earth, which is far too
+     little to show beside a sunlit crescent at any honest exposure, so the
+     level is lifted to make it visible, and the About says by how much. What
+     the light DOES is real: it follows the planet's phase as seen from the
+     moon, and the angle it strikes the ground at. */
+  const shine = (() => {
+    if (!b.moon || !Rsurf) return null;
+    const planet = byKey(b.of), Rp = planet && radiusOf(planet.key);
+    if (!Rp || !ALBEDO[planet.key]) return null;
+    const mr = moonRel(b, state.t);
+    const q = xf([-mr.x * AU_KM, -mr.y * AU_KM, -mr.z * AU_KM]);   // the planet, from here
+    const dist = Math.hypot(q[0], q[1], q[2]);
+    if (!dist) return null;
+    // how much of the planet is lit, from where this moon stands
+    const cosA = -(q[0]*sun[0] + q[1]*sun[1] + q[2]*sun[2]) / dist;
+    const k = (1 + cosA) / 2;
+    if (k <= 0) return null;
+    const full = ALBEDO[planet.key] * (Rp / dist) * (Rp / dist);   // true, at full phase
+    return { x: q[0], y: q[1], z: q[2],
+             level: SHINE_SHOW * Math.pow(full, .2) / SHINE_REF * k };
+  })();
+  // what fraction of the Sun still reaches a point on the surface, 1 being all of it
+  const sunOpen = (px, py, pz) => {
+    let hid = 0;
+    for (let i = 0; i < SH.length; i++) {
+      const s = SH[i];
+      const vx = px - s.qx, vy = py - s.qy, vz = pz - s.qz;
+      const LP = vx * s.ax + vy * s.ay + vz * s.az;
+      if (LP <= 0) continue;                             // this point is sunward of it
+      const v2 = vx * vx + vy * vy + vz * vz;
+      const rp = s.r + LP * s.spread;
+      if (v2 - LP * LP > rp * rp) continue;              // outside the cone, nothing to do
+      const dm = Math.sqrt(v2);
+      const sx = sun[0] * dSun - px, sy = sun[1] * dSun - py, sz = sun[2] * dSun - pz;
+      const ds = Math.hypot(sx, sy, sz);
+      let c = -(vx * sx + vy * sy + vz * sz) / (dm * ds);
+      c = c > 1 ? 1 : c < -1 ? -1 : c;
+      const sep = Math.acos(c);                          // Sun centre to occulter centre
+      const rs = Math.asin(Math.min(1, SUN_KM / ds));    // angular radius of the Sun
+      const rm = Math.asin(Math.min(1, s.r / dm));       // and of the thing in the way
+      let hidHere;
+      if (sep >= rs + rm) hidHere = 0;                        // clear
+      else if (sep <= rm - rs) hidHere = 1;                   // total: the Sun is gone
+      else if (sep <= rs - rm) hidHere = rm * rm / (rs * rs); // annular: a ring is left
+      else {                                                  // partial: two discs overlapping
+        const u1 = (sep*sep + rs*rs - rm*rm) / (2 * sep * rs);
+        const u2 = (sep*sep + rm*rm - rs*rs) / (2 * sep * rm);
+        const k1 = u1 > 1 ? 1 : u1 < -1 ? -1 : u1;
+        const k2 = u2 > 1 ? 1 : u2 < -1 ? -1 : u2;
+        const t = (rs + rm - sep) * (sep + rs - rm) * (sep - rs + rm) * (sep + rs + rm);
+        hidHere = (rs*rs * Math.acos(k1) + rm*rm * Math.acos(k2)
+                   - 0.5 * Math.sqrt(t > 0 ? t : 0)) / (Math.PI * rs * rs);
+      }
+      if (hidHere > hid) hid = hidHere;
+    }
+    return 1 - hid;
+  };
 
   // Only the part of the disc that is actually on screen gets rendered, so the
   // globe can be far larger than the window without allocating for it.
@@ -1411,6 +1601,17 @@ function drawGlobe(b, sx, sy, Rcss, depth, opt) {
       }
       let lit = nx*sun[0] + ny*sun[1] + nz*sun[2];
       lit = lit <= 0 ? 0 : Math.pow(lit, .78);
+      // sunlight that never arrives, because something is in front of the Sun.
+      // A flux multiplier, applied after the brightness curve, so half the Sun
+      // covered reads as half the light and not as half the brightness.
+      if (lit > 0 && SH.length) lit *= sunOpen(nx * Rsurf, ny * Rsurf, nz * Rsurf);
+      if (lit > 0 && ringShade) lit *= ringShade(nx * Rsurf, ny * Rsurf, nz * Rsurf);
+      if (shine) {                                  // and what the planet sends back
+        const ex = shine.x - nx*Rsurf, ey = shine.y - ny*Rsurf, ez = shine.z - nz*Rsurf;
+        const ed = Math.hypot(ex, ey, ez);
+        const inc = (nx*ex + ny*ey + nz*ez) / ed;
+        if (inc > 0) lit = Math.min(1, lit + shine.level * inc);
+      }
       const k = 0.035 + 0.965 * lit;
       const i = (py * gw + px) * 4;
       o[i] = r * k; o[i+1] = g * k; o[i+2] = bb * k;
@@ -1532,10 +1733,23 @@ function drawRings(b, F, sx, sy, Rcss, sun, front, basis) {
   };
   // how open the rings are to us — edge on they all but vanish, as they should
   const tilt = Math.abs(F.z[0]*basis.fwd[0] + F.z[1]*basis.fwd[1] + F.z[2]*basis.fwd[2]);
+  // Is this bit of ring standing in the planet's shadow? The Sun has to be on
+  // the far side of it, and the line out to the Sun has to pass through the
+  // globe. A ring particle in shadow gives off nothing, but it still hides
+  // whatever is behind it, so it is drawn as a dark filter rather than skipped.
+  const shadowed = (ang, rk) => {
+    const rr = rk * 1000, c = Math.cos(ang), sa = Math.sin(ang);
+    const px = (F.x[0]*c + F.y[0]*sa) * rr,
+          py = (F.x[1]*c + F.y[1]*sa) * rr,
+          pz = (F.x[2]*c + F.y[2]*sa) * rr;
+    const ps = px*sun[0] + py*sun[1] + pz*sun[2];
+    if (ps >= 0) return false;                       // facing the Sun, nothing in the way
+    return px*px + py*py + pz*pz - ps*ps < eqR * eqR;
+  };
   for (const [r0, r1, alpha] of RING_BANDS) {
     if (alpha < .08) continue;                       // the Cassini division is a gap
     // the visible half is one contiguous arc, so collect its runs and fill each
-    let run = [];
+    let run = [], runDark = false;
     const flush = () => {
       if (run.length < 2) { run = []; return; }
       ctx.beginPath();
@@ -1548,13 +1762,19 @@ function drawRings(b, F, sx, sy, Rcss, sun, front, basis) {
         ctx.lineTo(p.x, p.y);
       }
       ctx.closePath();
-      ctx.fillStyle = `rgba(228,211,175,${alpha * (.34 + .5 * tilt)})`;
+      ctx.fillStyle = runDark ? `rgba(16,14,12,${alpha})`
+                              : `rgba(228,211,175,${alpha * (.34 + .5 * tilt)})`;
       ctx.fill();
       run = [];
     };
+    const rm = (r0 + r1) / 2;
     for (let i = 0; i <= N; i++) {
       const a = i / N * TAU;
-      if ((pt(a, r1).toward > 0) === front) run.push(a); else flush();
+      if ((pt(a, r1).toward > 0) !== front) { flush(); continue; }
+      const dark = shadowed(a, rm);
+      if (run.length && dark !== runDark) { run.push(a); flush(); }   // meet at the edge
+      if (!run.length) runDark = dark;
+      run.push(a);
     }
     flush();
   }

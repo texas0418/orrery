@@ -1,7 +1,7 @@
-# Orrery — handoff, 2026-08-15
+# Orrery — handoff, updated 2026-10-08
 
 **Live:** https://orrery.simonbuilds.app · **Repo:** github.com/texas0418/orrery
-**Deployed build: 197,817 bytes.** Live, disk and the `/orrery` redirect all agree.
+**Deployed build: 213,374 bytes.** Live, disk and the `/orrery` redirect all agree.
 
 ---
 
@@ -9,7 +9,8 @@
 
 The site is fully working and deployed. The camera problem in §3 is **fixed and
 shipped**: `CAM.alt` is now a first-class camera property and every moon system
-frames on screen. Nothing is pending in the tree.
+frames on screen. The light-and-shadow pass of 2026-10-08 is also shipped — see
+§3b. Nothing is pending in the tree.
 
 ### Deploy procedure (every time)
 ```
@@ -120,6 +121,51 @@ links are in the session log; there are no tests in the repo (see §5.3).
 
 ---
 
+## 3b. LIGHT AND SHADOW — shipped 2026-10-08
+
+Four things, one engine, because they are all the same question: does the light
+get there. Built because Simon asked for something no other orrery page does,
+and chosen over the alternatives because every one of them **shortened** the
+About's list of admissions instead of lengthening it.
+
+- **Eclipses.** `sunOpen()` in `drawGlobe` asks, per pixel of lit surface, how
+  much of the Sun's disc an occulter covers from that point: the two discs on
+  the sky and the area of their overlap. Umbra is where that reaches all of it,
+  penumbra where it reaches some, annular where the occulter fits inside. The
+  occulter list is `occultersOf(b, t)`: a planet's moons, or for a moon its
+  planet and siblings. A cheap cone test rejects the whole occulter per frame
+  when its penumbra cannot touch the body, so the cost is only paid during an
+  actual eclipse.
+- **Ring shadows, both ways.** `drawRings` splits each band's visible arc into
+  lit and shadowed runs; a shadowed ring particle gives off nothing but still
+  hides what is behind it, so it is filled as a dark filter at the band's own
+  opacity rather than skipped. `ringShade()` does the other direction, following
+  the ray from each surface pixel out to the ring plane and dimming by the band
+  it crosses, with the depth divided by the slant so the shadow goes thin and
+  hard near equinox.
+- **Planetshine.** A moon's night side is lit by its planet. True ratio for
+  Earth on the Moon is about 1/12,000 of sunlight, so it is lifted to 12% on
+  screen (`SHINE_SHOW`) with the phase and incidence left real. Declared in the
+  About in those words.
+- **Libration.** Our Moon now uses the IAU 2015 lunar model, `lunarRot()`, with
+  the full E1–E13 series, routed through the same `bodyFrame` the planets use.
+  This also closed a split nobody had noticed: the sky view was using `ROT.moon`
+  while the orrery used `moonFrame`'s perfect synchronous lock, so the same Moon
+  had two orientations depending on the view.
+
+**Verified against outside sources, not against itself:** NASA's published
+eclipse path tables for 2024-04-08 and 2027-08-02, and JPL Horizons vectors for
+Io and Ganymede. Numbers in the accuracy table below.
+
+**The A/B that saved me.** The first Saturn render looked wrong and I was about
+to go hunting in the shadow code. Instead I built a copy of the page with only
+the ring shadows disabled and measured the same frame twice: the lit southern
+hemisphere came out at 150.1 in both, identical, while the north went 134.3 →
+94.7. The code was right and the rings had always looked like that at that
+angle. **Do this before believing your eyes on a rendering change.**
+
+---
+
 ## 4. Hard-won facts — do not rediscover these
 
 - **Never call `positionAt()` on something that might be a moon.** It returns a
@@ -153,6 +199,17 @@ links are in the session log; there are no tests in the repo (see §5.3).
   0×0.** Every flight freezes and `VIEW.fit` falls to its floor, which looks
   exactly like a camera bug. Screenshot to bring the pane back, or drive
   `stepFly(CAM.fly.t0 + CAM.fly.ms + 1)` by hand when scripting checks.
+- **The Moon's coordinates are of date; everything else is J2000.** Schlyter's
+  series returns ecliptic longitude referred to the equinox of date. `moonGeo`
+  now precesses it back to J2000 before returning. Leaving that out is a silent
+  0.39° error in 2027 growing at ~50″/yr from 2000, so 1.7° at the 1800 end:
+  two thirds of a lunar diameter, in BOTH the orrery and the sky view, while the
+  About claimed a few arcminutes. It went unnoticed for months because nothing
+  on the page cross-checked the Moon against anything. Eclipses did.
+- **A close camera cannot see a thin crescent, and that is not a bug.** From
+  `alt` radii up you see only `acos(1/alt)` from the point below you. At 2.3
+  radii that is 64°, and a 5%-lit crescent lives past that horizon. You have to
+  be as far off as Earth is to see one. Use ~20% lit for a close earthshine shot.
 - **Approach and the scene are different spaces, and no zoom joins them.** Radial
   compression means that at Earth's system-framing altitude the scene camera
   would have to sit at zoom ~1,150 to show the same field, and for the two to
@@ -167,6 +224,10 @@ links are in the session log; there are no tests in the repo (see §5.3).
 | Moons | 14 of the 19 fitted under 1°, 12 under 0.3°; worst Triton 4.9°, Miranda 4.6°. Our own Moon is the 20th and comes from Schlyter, not a fit |
 | Sunrise/sunset | within 1 minute of published NYC times |
 | Sub-solar point | 0.0001° at solstices |
+| Eclipse path | 137–143 km off NASA's centre line (2027-08-02), 226–239 km (2024-04-08) |
+| Greatest eclipse | 26 s early (2024), 130 s late (2027); most of the latter is unmodelled Delta T |
+| Galilean positions | Io 0.024° from Horizons, Ganymede 0.223°, at matched dynamical time |
+| Lunar libration | ±8.0° longitude, ±6.9° latitude; 58.1% of the surface ever visible (59% published incl. diurnal) |
 
 ---
 
@@ -181,8 +242,13 @@ links are in the session log; there are no tests in the repo (see §5.3).
 2. Triton (4.9°) and Miranda (4.6°) still exceed the rest. Both need a proper
    perturbation model, not a better fit — a different kind of project. Currently
    disclosed in the About.
-3. No CI on this repo; it is the odd one out among the twelve.
-4. `simonbuilds.app` homepage now has a **Just For Fun** section linking here
+3. **Delta T is not modelled.** The page treats the clock reading as dynamical
+   time, which is ~73 s off UT in 2027 and grows at both ends of the window. It
+   is most of the residual in eclipse timing. Adding it would sharpen every date
+   on the page and would mean re-checking the sunrise/sunset claim, so it is its
+   own job, not a rider on something else.
+4. No CI on this repo; it is the odd one out among the twelve.
+5. `simonbuilds.app` homepage now has a **Just For Fun** section linking here
    (backup at `index-backup-2026-08-15.html` on the server). Local mirror at
    `~/My Documents/Apps/MyWebsite/` was updated to match.
 
