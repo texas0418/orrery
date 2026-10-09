@@ -418,7 +418,7 @@ button.t.on{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,161
     <nav class="toc" id="toc" aria-label="Sections"></nav>
 
     <h3 data-toc="Looking at">What you're looking at</h3>
-    <p>The positions on screen are not an animation loop or a decorative approximation. Every frame, the page solves Kepler's equation for each planet from the orbital elements JPL publishes for the interval 1800–2050, and draws the answer. Set the date to any moment in that range and the picture is where those worlds genuinely were, or genuinely will be, to within a few arcminutes.</p>
+    <p>The positions on screen are not an animation loop or a decorative approximation. Every frame, the page solves Kepler's equation for each planet from the orbital elements JPL publishes for the interval 1800–2050, and draws the answer. Set the date to any moment in that range and the picture is where those worlds genuinely were, or genuinely will be \u2014 to within half an arcminute for the inner planets, and a fifth of a degree at the very worst, which is Saturn. Every body's card carries its own measured figure; see <em>What's honest</em>.</p>
     <p>The camera starts above the plane of Earth's orbit, on its north side, where everything runs counter-clockwise. You can move it. The tick ring around the outside is ecliptic longitude, zero at the vernal equinox, marked every 30° with the sign that shares that stretch of sky.</p>
 
     <h3 data-toc="What's honest">What's honest and what isn't</h3>
@@ -428,13 +428,14 @@ button.t.on{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,161
       <li><strong>Distances:</strong> compressed by default. The <em>Spread</em> slider is an exponent: at 100 the layout is linearly true to scale, at which point Mercury sits a pixel from the Sun and is effectively invisible. At the default 45 you can see the whole system at once. The numbers in the panels are always the true ones.</li>
       <li><strong>Body sizes:</strong> not to scale, and could never be. At this zoom Earth would be far smaller than one pixel. The one place the page does enlarge things, the <em>Approach</em> view, prints the factor it is using.</li>
       <li><strong>Inclination:</strong> real, and now visible. The orrery is drawn with a camera in three dimensions, so the few degrees each orbit is tilted out of the plane of Earth's orbit are on screen rather than projected away. Press <em>Edge on</em> and select Pluto: 17° of tilt, swinging clear of the thin sheet everything else keeps to. Each planet drops a dotted line to that plane so you can read its height off directly.</li>
+      <li><strong>Every body carries its own scorecard.</strong> Select one and its card shows the worst disagreement between this page and JPL Horizons found in the decade on the clock, out of 1,521 dates checked per body. A measurement, not a promise — and the measuring corrected two of this page's own claims, which is the point of it. For Jupiter and Saturn it lands where the source table says it should: Standish's own notes allow 400 and 600 arcseconds over this window, and the worst found here is 516 and 738.</li>
       <li><strong>Compression does not distort direction.</strong> <em>Spread</em> scales how far a body sits from the Sun but never which way, so the inclination and the ecliptic longitude on screen are exact at every setting. Only distance is negotiable.</li>
     </ul>
 
     <h3 data-toc="The belt">The asteroid belt</h3>
     <p>The gap between Mars and Jupiter is not empty, so four of its residents are drawn in it: <strong>Ceres, Pallas, Juno and Vesta</strong> — the first four found, between 1801 and 1807, and all four were counted as planets for about fifty years before anyone realised how many more there were.</p>
     <p>They are worth having for the same reason Pluto is. Pallas is tilted almost 35° out of the plane, steeper than Pluto and steeper than anything else of its size; press <em>Edge on</em> and it climbs clear of everything. Juno and Pallas are both markedly eccentric. The belt is not a tidy ring.</p>
-    <p>Their elements are handled differently from the planets' and it is worth saying how. JPL publishes a current osculating orbit for each, which is exact today and drifts badly once you leave — Ceres alone ends up 14° out of place by 1800, because Jupiter has been pulling on it the whole way. So instead I sampled each orbit from JPL Horizons every five years across 1800–2050 and fitted secular rates to the result, which is the same treatment the planets get. That brings the worst error anywhere in the window down to <strong>0.7°</strong>. A fifth, Hygiea, would not fit that cleanly — it was still nearly 5° out — so it is not here. Being absent seemed better than being wrong.</p>
+    <p>Their elements are handled differently from the planets' and it is worth saying how. JPL publishes a current osculating orbit for each, which is exact today and drifts badly once you leave — Ceres alone ends up 14° out of place by 1800, because Jupiter has been pulling on it the whole way. So instead I sampled each orbit from JPL Horizons every five years across 1800–2050 and fitted secular rates to the result, which is the same treatment the planets get. Checked densely — 1,521 dates each — the worst anywhere in the window is <strong>2.5°</strong>, Pallas in the 1850s, with Ceres and Juno under a degree and Vesta under half of one. An earlier draft of this paragraph claimed 0.7° on the strength of a four-date check; the denser one found the corners. A fifth, Hygiea, would not fit that cleanly — it was still nearly 5° out — so it is not here. Being absent seemed better than being wrong.</p>
     <p>They are left out of the sky view and the five-year sweep, since only Vesta ever gets near naked-eye brightness and none of them belongs in a list of things to go outside and look at.</p>
 
     <h3>Events</h3>
@@ -473,7 +474,7 @@ button.t.on{color:#fff;background:rgba(79,110,247,.24);border-color:rgba(139,161
     <p>Coverage is honest too. Triton was photographed by one spacecraft on one pass, so its map covers the hemisphere Voyager 2 saw and no more. <strong>Five moons have no map, for a reason worth knowing.</strong> Voyager 2 passed Uranus once, in 1986, with the planet's pole aimed almost at the Sun — so only the southern hemispheres of Miranda, Ariel, Umbriel, Titania and Oberon have ever been photographed at all. There is no global mosaic to have. Those five and Deimos arrive as shape and sunlight only: the size factor and the lit fraction are real, the face is not.</p>
     <p>They are in the sky as well. Narrow the field below about a degree and Io, Europa, Ganymede and Callisto string out along the ecliptic beside Jupiter, arranged as they actually are that night — which is a real observing aid, because they are a binocular target and the pattern changes every few hours.</p>
     <p>Getting them right took two goes. JPL publishes mean elements for satellites, referenced to each planet's Laplace plane, and they looked ideal. They are not: their orbital <em>phases</em> are out by as much as 178°, which would have put Io on the wrong side of Jupiter — the most convincing kind of wrong. So instead each moon was sampled from JPL Horizons every 150 to 731 days across 1800–2050 and its elements fitted to that, exactly as the asteroids were. A moon keeps to its planet's equatorial plane and a planet's pole barely moves, so the inclination and node in ecliptic coordinates stay nearly constant and a straight line through them holds.</p>
-    <p>Every fitted one is checked against Horizons at four dates spread across the whole window — nineteen of the twenty, our own Moon being the exception, since it comes from a lunar theory rather than a fit. Fourteen of the nineteen land within a degree and twelve within a third of one; Charon, Titan, Dione and Io are inside a twentieth. The stubborn ones are Triton at 4.9° and Miranda at 4.6°, then Tethys, Phobos and Deimos between 1.8 and 2.3.</p>
+    <p>Every one is checked against Horizons at 1,521 dates spread sixty days apart across the whole window, our own Moon included, and the worst each decade produced is stored in the page and shown on the body's card. Fourteen of the nineteen fitted moons stay within a degree at their very worst; Charon stays inside a hundredth of one, Io and Dione inside a tenth. The stubborn ones are Triton at 5.3° and Miranda at 4.9°, then Phobos at 3.6°, Tethys at 2.6° and Deimos at 2.0° — a little worse than the four-date check used to claim, because checking more found more.</p>
     <p>Phobos was the interesting one. It went round Mars three times a day and a straight line in longitude put it 12° out — because Phobos is <em>spiralling in</em>. Tides are dragging it down about two centimetres a year and its orbital period is measurably shortening, so its mean motion is accelerating and no constant rate can describe it. Giving the longitude a quadratic term brought it to 2.2°. That is a real physical effect showing up as a curve in a fit, which is the sort of thing that makes a number worth chasing.</p>
     <p><strong>Mimas is missing.</strong> It is locked in a two-to-one resonance with Tethys and librates, and no fixed ellipse can follow that: the fit put it 111° along its orbit from where it belongs, so it is not here at all. Same reasoning as Hygiea in the belt.</p>
 
@@ -1145,11 +1146,11 @@ const ROT = {
   mercury:{a0:281.0103,a0T:-0.0328,d0:61.4155,d0T:-0.0049,W0:329.5988,Wd:6.1385108,km:2439.7},
   venus:  {a0:272.76,  a0T:0,      d0:67.16,  d0T:0,      W0:160.20,  Wd:-1.4813688,km:6051.8},
   earth:  {a0:0.00,    a0T:-0.641, d0:90.00,  d0T:-0.557, W0:190.147, Wd:360.9856235,km:6371.0},
-  mars:   {a0:317.269, a0T:-0.107, d0:54.432, d0T:-0.0609,W0:176.049863,Wd:350.891982443297,km:3389.5},
+  mars:   {a0:317.269202,a0T:-0.10927547,d0:54.432516,d0T:-0.05827105,W0:176.049863,Wd:350.891982443297,km:3389.5},
   jupiter:{a0:268.056595,a0T:-0.006499,d0:64.495303,d0T:0.002413,W0:284.95,Wd:870.5360000,km:69911},
   saturn: {a0:40.589,  a0T:-0.036, d0:83.537, d0T:-0.004, W0:38.90,   Wd:810.7939024,km:58232},
   uranus: {a0:257.311, a0T:0,      d0:-15.175,d0T:0,      W0:203.81,  Wd:-501.1600928,km:25362},
-  neptune:{a0:299.36,  a0T:0,      d0:43.46,  d0T:0,      W0:253.18,  Wd:536.3128492,km:24622},
+  neptune:{a0:299.36,  a0T:0,      d0:43.46,  d0T:0,      W0:249.978, Wd:541.1397757,km:24622},
   moon:   {a0:269.9949,a0T:0.0031, d0:66.5392,d0T:0.0130, W0:38.3213, Wd:13.17635815,km:1737.4}
 };
 const AU_KM = 149597870.7;
@@ -1173,6 +1174,34 @@ const helioOf = (b, t) => b.moon ? moonHelio(b, t) : positionAt(b, century(t));
 // equatorial -> ecliptic, the inverse of eclToEq
 const eqToEcl = (x, y, z) => [x, y * CE + z * SE, -y * SE + z * CE];
 
+// Two bodies whose IAU orientation does not reduce to the polynomials above.
+// Mars's 2015 model keeps its familiar pole inside trig terms whose angles
+// advance half a degree per CENTURY — effectively constants wearing a
+// disguise. Copy only the polynomial, as this page once did, and the pole
+// lands 1.55 degrees away and the meridian 0.58. Neptune's pole and meridian
+// ride a 688-year wobble, and its old W constants (253.18, 536.3128492) were
+// a superseded vintage that had the rotation phase 31 degrees out by 2026 and
+// drifting almost five degrees a day.
+const ROT_TRIG = {
+  mars(T) {
+    const s = x => Math.sin(x * D2R), c = x => Math.cos(x * D2R);
+    return {
+      a: 0.000068*s(198.991226 + 19139.4819985*T) + 0.000238*s(226.292679 + 38280.8511281*T)
+       + 0.000052*s(249.663391 + 57420.7251593*T) + 0.000009*s(266.183510 + 76560.6367950*T)
+       + 0.419057*s(79.398797 + 0.5042615*T),
+      d: 0.000051*c(122.433576 + 19139.9407476*T) + 0.000141*c(43.058401 + 38280.8753272*T)
+       + 0.000031*c(57.663379 + 57420.7517205*T) + 0.000005*c(79.476401 + 76560.6495004*T)
+       + 1.591274*c(166.325722 + 0.5042615*T),
+      w: 0.000145*s(129.071773 + 19140.0328244*T) + 0.000157*s(36.352167 + 38281.0473591*T)
+       + 0.000040*s(56.668646 + 57420.9295360*T) + 0.000001*s(67.364003 + 76560.2552215*T)
+       + 0.000001*s(104.792680 + 95700.4387578*T) + 0.584542*s(95.391654 + 0.5042615*T)
+    };
+  },
+  neptune(T) {
+    const N = (357.85 + 52.316 * T) * D2R;
+    return { a: 0.70 * Math.sin(N), d: -0.51 * Math.cos(N), w: -0.48 * Math.sin(N) };
+  }
+};
 // The Moon is the one body here whose orientation is not a steady spin. It
 // rocks. Its rotation is uniform but its orbit is not, so the face it turns to
 // us swings about eight degrees east and west; and its axis is tilted to its
@@ -1207,6 +1236,8 @@ function bodyFrame(key, t) {
   const T = century(t), d = jd(t) - J2000;
   const L = key === 'moon' ? lunarRot(t)
                            : { a0: R.a0 + R.a0T * T, d0: R.d0 + R.d0T * T, W: R.W0 + R.Wd * d };
+  const fx = ROT_TRIG[key];
+  if (fx) { const fc = fx(T); L.a0 += fc.a; L.d0 += fc.d; L.W += fc.w; }
   const a0 = L.a0 * D2R, d0 = L.d0 * D2R;
   const W = (((L.W % 360) + 360) % 360) * D2R;
   const n = [Math.cos(d0)*Math.cos(a0), Math.cos(d0)*Math.sin(a0), Math.sin(d0)];
@@ -2399,6 +2430,18 @@ function signOf(lonDeg) {
   return `${s[0]} ${s[1]} ${(d % 30).toFixed(1)}°`;
 }
 // signed elongation from the Sun as seen from Earth (radians, + = east of Sun)
+// The true angular distance from the Sun, latitude included. Oppositions are
+// defined by the projected longitude, but greatest elongation is an angle in
+// the sky — and for Mercury, seven degrees out of the ecliptic, the two peak
+// four hours apart.
+function elongAt(b, t) {
+  const T = century(t);
+  const e = positionAt(EARTH, T), p = positionAt(b, T);
+  const px = p.x - e.x, py = p.y - e.y, pz = p.z - e.z;
+  const c = -(e.x*px + e.y*py + e.z*pz) /
+            (Math.hypot(e.x, e.y, e.z) * Math.hypot(px, py, pz));
+  return Math.acos(Math.max(-1, Math.min(1, c)));
+}
 function relLonAt(b, t) {
   const T = century(t);
   const e = positionAt(EARTH, T), p = positionAt(b, T);
@@ -2418,18 +2461,18 @@ function nextEvent(b, t0) {
   const step = b.inner ? 0.5 * DAY : DAY;
   const span = b.inner ? 700 * DAY : 900 * DAY;
   if (b.inner) {
-    let prev = Math.abs(relLonAt(b, t0)), cur = Math.abs(relLonAt(b, t0 + step));
+    let prev = elongAt(b, t0), cur = elongAt(b, t0 + step);
     for (let t = t0 + step; t < t0 + span; t += step) {
-      const next = Math.abs(relLonAt(b, t + step));
+      const next = elongAt(b, t + step);
       if (cur > prev && cur >= next) {                       // local maximum
         let lo = t - step, hi = t + step;                    // ternary refine
         for (let i = 0; i < 60 && hi - lo > 60e3; i++) {
           const m1 = lo + (hi - lo) / 3, m2 = hi - (hi - lo) / 3;
-          if (Math.abs(relLonAt(b, m1)) < Math.abs(relLonAt(b, m2))) lo = m1; else hi = m2;
+          if (elongAt(b, m1) < elongAt(b, m2)) lo = m1; else hi = m2;
         }
         const tp = (lo + hi) / 2, rl = relLonAt(b, tp);
         return { t: tp, label: `Greatest elongation ${rl > 0 ? 'east' : 'west'}`,
-          detail: `${(Math.abs(rl) * R2D).toFixed(1)}° from the Sun — best ${rl > 0 ? 'evening' : 'morning'} visibility.` };
+          detail: `${(elongAt(b, tp) * R2D).toFixed(1)}° from the Sun — best ${rl > 0 ? 'evening' : 'morning'} visibility.` };
       }
       prev = cur; cur = next;
     }
@@ -2518,12 +2561,12 @@ function scanAhead(t0, days = 1826) {
       for (let i = 1; i < days; i++) {
         const a = Math.abs(r[i - 1]), c = Math.abs(r[i]), d = Math.abs(r[i + 1]);
         if (!(c > a && c >= d)) continue;
-        const g = t => -Math.abs(relLonAt(b, t));
+        const g = t => -elongAt(b, t);
         const tp = minimise(g, at(i - 1), at(i + 1));
         const v = relLonAt(b, tp);
         out.push({ t: tp, body: b, kind: 'elong',
           title: `${b.name} at greatest elongation ${v > 0 ? 'east' : 'west'}`,
-          note: `${(Math.abs(v) * R2D).toFixed(0)}° from the Sun — its best ${v > 0 ? 'evening' : 'morning'} showing.` });
+          note: `${(elongAt(b, tp) * R2D).toFixed(0)}° from the Sun — its best ${v > 0 ? 'evening' : 'morning'} showing.` });
       }
     } else {                                         // opposition
       const f = t => wrapPi(relLonAt(b, t) - Math.PI);
@@ -2657,6 +2700,7 @@ function select(b) {
     rows.filter(r => !skip(r[1]))
         .map(r => `<div class="kv"><span>${r[0]}</span><span data-c="${r[1]}">—</span></div>`).join('') +
     `<div class="evt" data-c="appr" hidden></div>` +
+    `<div class="evt" data-c="chk" hidden></div>` +
     `<div class="evt" data-c="evt" hidden></div>`;
   cell = {};
   for (const el of detailEl.querySelectorAll('[data-c]')) cell[el.dataset.c] = el;
@@ -2687,9 +2731,73 @@ let rsCache = { key: null, day: null, val: null };
 const fmtClock = t => new Date(t).toLocaleTimeString(undefined,
   { hour: '2-digit', minute: '2-digit' });
 
+/* ---------- the self-check ----------
+   Every body on this page was compared against JPL Horizons at 1,521 dates,
+   sixty days apart across the whole 1800-2050 window, and what is stored here
+   is the WORST disagreement found in each decade: 25 numbers per body, in
+   arcminutes, measured at the Sun for a planet or an asteroid, at its planet
+   for a moon, at the Earth for our Moon. The card shows the number for the
+   decade on the clock. These are measurements of this page's own output, not
+   quotes from anyone's documentation, and regenerating them after any change
+   to the elements is part of changing the elements. The check exists because
+   the Moon spent months 0.39 degrees out of place while the About claimed a
+   few arcminutes, and nothing on the page was in a position to notice. */
+const CHECKED = {
+  mercury:[0.32,0.39,0.4,0.5,0.3,0.46,0.34,0.32,0.31,0.33,0.32,0.26,0.32,0.27,0.41,0.44,0.31,0.44,0.49,0.46,0.42,0.45,0.38,0.35,0.32],
+  venus:[0.38,0.44,0.36,0.38,0.39,0.39,0.35,0.36,0.35,0.38,0.37,0.34,0.4,0.42,0.36,0.41,0.35,0.37,0.41,0.38,0.45,0.42,0.4,0.42,0.45],
+  earth:[0.43,0.35,0.49,0.42,0.46,0.36,0.37,0.41,0.38,0.4,0.43,0.31,0.35,0.43,0.42,0.33,0.42,0.42,0.38,0.45,0.3,0.36,0.41,0.32,0.37],
+  mars:[1.1,1.6,1.2,1,1.1,1.6,1.5,1.2,0.95,1.1,1.5,1.5,0.97,1.1,1.2,1.5,1.3,0.96,1.1,1.1,1.7,1,1.1,1.3,1.3],
+  jupiter:[8,7.5,4.8,5.2,7.4,7,5.4,4.5,3.2,6.5,8,7.3,5.5,5.1,3.5,5.5,6.6,5.6,7,6.1,5,3.4,4.3,3.4,8.6],
+  saturn:[9.6,8,3.7,6.3,10,10,2.3,2,3.7,9.1,12,12,4.9,3.7,3.5,6.9,8.1,8.1,3.3,8.7,9.3,7.3,4.4,6.9,6.9],
+  uranus:[1.4,1.1,0.97,0.86,1,0.89,1.4,1.3,2,1,1.2,1.5,0.83,0.95,1.2,1,1.4,1.7,1.6,1.2,1.2,1.7,1.8,1.2,1.9],
+  neptune:[0.92,0.75,0.83,0.98,0.98,0.8,0.72,0.58,0.92,0.82,0.73,0.7,0.7,0.53,1,0.58,0.87,0.71,0.76,0.75,0.75,0.93,0.84,0.97,0.72],
+  pluto:[0.62,0.59,0.39,0.37,0.65,0.51,0.52,0.43,0.5,0.46,0.51,0.37,0.62,0.56,0.58,0.94,0.92,0.62,0.84,0.97,0.62,0.47,0.86,0.63,0.56],
+  ceres:[32,21,17,31,14,20,30,21,31,25,15,29,25,19,34,32,21,25,27,29,26,19,21,29,23],
+  pallas:[70,94,55,72,75,150,130,24,100,120,77,83,51,120,130,26,53,130,87,89,41,61,110,41,24],
+  juno:[37,39,45,29,40,27,51,44,25,40,38,39,35,26,49,47,23,44,23,43,36,25,35,44,47],
+  vesta:[17,14,20,21,17,10,22,16,16,19,11,20,8.8,18,18,15,19,20,14,14,20,16,21,12,19],
+  luna:[4.2,3.4,4.1,4.2,3.3,3.9,4.1,4,3.7,4,3.9,3.6,3.8,4.5,3.6,2.6,3.1,4.1,3.8,3.1,3.8,3.7,3.1,2.8,5.6],
+  phobos:[210,210,200,210,200,210,200,210,210,210,210,210,210,210,210,210,210,210,210,210,210,210,210,210,210],
+  deimos:[100,100,110,120,110,110,100,110,110,110,110,110,100,110,110,110,110,110,100,110,120,120,110,100,100],
+  io:[3.1,2.8,3.3,2.7,2.8,2.9,2.8,2.7,2.9,2.9,2.9,2.8,2.7,2.8,2.8,2.7,2.9,2.9,2.8,2.8,3,2.8,2.9,2.7,2.9],
+  europa:[27,31,32,28,30,31,28,29,29,28,29,29,28,30,30,25,31,32,26,30,30,27,30,29,28],
+  ganymede:[24,23,22,21,20,14,16,19,20,24,27,26,26,25,24,22,24,22,25,25,22,22,21,16,14],
+  callisto:[7,4.8,3.6,3.7,3.2,3.2,2.8,2.7,3.1,3.4,4.4,5.2,5.5,6,6,5.9,5.8,5.1,4,3.7,3.5,5.1,5.7,7.3,8.4],
+  enceladus:[22,24,26,27,28,27,24,21,24,26,27,28,26,25,23,22,26,27,28,26,26,23,24,26,27],
+  tethys:[130,130,110,120,160,150,100,120,130,120,120,150,140,110,130,140,120,100,150,150,110,120,130,130,110],
+  dione:[4.1,3.3,3,3.4,2.8,3.2,3.7,3.5,3.3,3.7,3.3,4,3.6,2.5,3.3,2.6,3,3,3.1,3.4,3,2.9,3.2,3.5,4],
+  rhea:[20,21,22,21,19,21,22,20,20,21,20,20,20,19,20,20,19,20,21,21,19,21,22,20,21],
+  titan:[7,5.9,4,2.9,2.2,1.6,2.6,3,3.3,4,4.3,4.4,4.5,4.4,3.8,4,3.3,2.5,2.3,2.1,2,3.5,4.4,5.4,7.4],
+  iapetus:[8.5,7.8,6.5,8.7,7.9,5.9,7.3,6.3,6,9.4,6.4,6.5,7.7,5.6,6.1,8.7,6,6.8,8.2,6.6,7.3,7.1,7.6,8,8.4],
+  miranda:[270,290,280,280,290,280,290,280,280,280,280,280,280,280,280,280,280,280,280,290,280,290,280,300,280],
+  ariel:[12,14,15,13,14,12,13,12,12,13,12,14,13,13,14,13,14,11,11,13,12,13,12,12,14],
+  umbriel:[7.3,7.1,7.3,7.3,8.1,8.9,9.7,10,9,9.1,10,10,12,10,10,8.6,9.1,8.8,8.4,9.6,9.7,6.9,7.5,9.3,11],
+  titania:[17,18,19,18,18,20,20,20,21,23,22,23,22,24,24,20,18,13,9.6,13,19,22,24,27,27],
+  oberon:[25,23,24,19,16,13,8.5,14,18,20,23,24,24,25,25,22,22,22,22,24,24,24,23,20,19],
+  triton:[260,210,150,100,57,27,58,85,110,130,140,150,150,150,150,140,120,94,66,32,58,110,170,240,320],
+  charon:[0.13,0.13,0.12,0.096,0.067,0.047,0.071,0.1,0.13,0.15,0.16,0.17,0.16,0.14,0.1,0.15,0.18,0.19,0.16,0.15,0.15,0.13,0.1,0.16,0.2]
+};
+function fillCheck(b) {
+  if (!cell.chk) return;
+  const d = b && CHECKED[b.key];
+  if (!d) { cell.chk.hidden = true; return; }
+  const yr = new Date(state.t).getUTCFullYear();
+  const di = Math.max(0, Math.min(24, Math.floor((yr - 1800) / 10)));
+  const v = d[di];
+  const amt = v < 1 ? Math.round(v * 60) + ' arcseconds'
+            : v < 60 ? (v < 10 ? v.toFixed(1) : Math.round(v)) + ' arcminutes'
+            : (v / 60).toFixed(1) + '\u00b0';
+  const anchor = b.moon ? (b.key === 'luna' ? 'the Earth' : 'its planet') : 'the Sun';
+  cell.chk.hidden = false;
+  cell.chk.innerHTML = `<span class="lbl">Checked against JPL</span>
+    <div class="when">Worst in the ${1800 + di * 10}s: ${amt}</div>
+    <div class="note">Horizons, sampled every sixty days across 1800\u20132050;
+    the angle at ${anchor}. Measured, not promised.</div>`;
+}
 function updateDetail() {
   const b = state.sel; if (!b) return;
   const set = (k, v) => { if (cell[k]) cell[k].textContent = v; };
+  fillCheck(b);
   if (b.moon) {
     const rel = moonRel(b, state.t);
     const d = Math.hypot(rel.x, rel.y, rel.z) * AU_KM;
@@ -2735,7 +2843,7 @@ function updateDetail() {
       set('rsun', Math.hypot(p.x, p.y, p.z).toFixed(3) + ' AU');
       set('rearth', Math.hypot(p.x - e.x, p.y - e.y, p.z - e.z).toFixed(3) + ' AU');
       const rl = relLonAt(b, state.t);
-      set('elong', (Math.abs(rl) * R2D).toFixed(1) + '° ' + (rl > 0 ? 'E' : 'W'));
+      set('elong', (elongAt(b, state.t) * R2D).toFixed(1) + '° ' + (rl > 0 ? 'E' : 'W'));
     }
     if (cell.evt) cell.evt.hidden = true;
     return;
@@ -2755,7 +2863,7 @@ function updateDetail() {
     const rl = relLonAt(b, state.t);
     set('rearth', rEarth.toFixed(3) + ' AU');
     set('light', fmtLight(rEarth));
-    set('elong', (Math.abs(rl) * R2D).toFixed(1) + '° ' + (rl > 0 ? 'E' : 'W'));
+    set('elong', (elongAt(b, state.t) * R2D).toFixed(1) + '° ' + (rl > 0 ? 'E' : 'W'));
   }
   updateApproachCell(b);
   if (evtCache.key !== b.key || Math.abs(state.t - evtCache.at) > DAY / 2) {

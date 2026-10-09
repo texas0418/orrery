@@ -1,7 +1,7 @@
-# Orrery — handoff, updated 2026-10-08
+# Orrery — handoff, updated 2026-10-08 (second pass: audit + self-check)
 
 **Live:** https://orrery.simonbuilds.app · **Repo:** github.com/texas0418/orrery
-**Deployed build: 213,374 bytes.** Live, disk and the `/orrery` redirect all agree.
+**Deployed build: 221,860 bytes.** Live, disk and the `/orrery` redirect all agree.
 
 ---
 
@@ -166,6 +166,57 @@ angle. **Do this before believing your eyes on a rendering change.**
 
 ---
 
+## 3c. THE AUDIT AND THE SELF-CHECK — 2026-10-08
+
+After the Moon precession bug, Simon asked whether the whole page needed
+auditing. The answer was: audit everything that had never been compared to an
+outside source. Five items, all now measured:
+
+1. **Which face you see** (`bodyFrame` vs Horizons sub-solar points, all seven
+   mapped planets). Mercury 0.0003°, Venus 0.004°, Saturn 0.05°, Jupiter and
+   Uranus exact up to the documented Delta T. Two were WRONG and are fixed:
+   - **Mars:** the IAU 2015 model keeps its familiar pole inside trig terms
+     whose angles move half a degree per CENTURY. The page had copied only the
+     polynomial, losing 1.55° of pole and 0.58° of meridian. Now in `ROT_TRIG`.
+     After the fix: 0.001° in latitude, Delta T explains the rest to 0.002°.
+   - **Neptune:** W0/Wd were a superseded vintage (253.18 / 536.3128492 vs the
+     current 249.978 / 541.1397757) — 31.5° out by 2026 and drifting ~4.8°/day,
+     plus the missing 688-year N wobble. After: 0.004° / Delta T to 0.01°.
+2. **Stars** (five brightest named, vs SIMBAD): all within the catalogue's own
+   0.01° packing; worst 0.014° (Betelgeuse).
+3. **Sky chain** (Jupiter alt/az from New York vs Horizons topocentric,
+   airless): 1.2 arcmin, no mirror. The `skyMatrix` east-vector comment stands.
+4. **Moon phase and size** (vs Horizons): illuminated fraction to 0.01%,
+   angular diameter to 1.1″.
+5. **Events** (vs Horizons S-O-T): Venus/Mars/Jupiter/Saturn within ~1.6 h.
+   Mercury was 4.3 h out because greatest elongation was computed on projected
+   longitude, which ignores latitude — and Mercury is 7° out of the ecliptic.
+   `elongAt()` (true angular separation) now drives elongations and the panel's
+   elongation row; Mercury lands at 09:53 vs the true ~10:00.
+
+**The self-check (`CHECKED` + `fillCheck`):** every body compared to Horizons
+at 1,521 dates (60-day steps, 1800–2050); the stored value is the WORST error
+per decade, in arcminutes, shown on the body's card for the decade on the
+clock. Angle measured at the Sun (planets/asteroids), the parent (moons), the
+Earth (our Moon).
+
+**To regenerate after touching any elements:** fetch Horizons VECTORS per body
+(CSV, AU-D, ecliptic J2000, 60 d steps — the fetch script pattern is in the
+session log of 2026-10-08; targets: planets nnn9, moons by satellite number,
+asteroids '1;'–'4;', centers 500@10 / 500@parent / 500@399), serve the parsed
+JSONs to the page locally, evaluate `positionAt`/`moonRel` at the same JDTDB
+treating it as the page clock, take decade maxima, paste into `CHECKED`.
+Neptune/Pluto/Triton/Charon ephemerides start Jan 2–4 1800, not Jan 1.
+
+**It corrected the About twice on arrival:** "planets sub-arcminute" was false
+(Jupiter 8.6′, Saturn 12.3′ — consistent with Standish's own published 400″ and
+600″ allowances), and "asteroids worst 0.72°" was a four-date check's optimism
+(Pallas reaches 2.5°). The moons' worst figures also nudged up (Triton 5.3°,
+Miranda 4.9°, Phobos 3.6°) because 1,521 dates find corners four dates miss.
+The About now states the measured numbers and says where they came from.
+
+---
+
 ## 4. Hard-won facts — do not rediscover these
 
 - **Never call `positionAt()` on something that might be a moon.** It returns a
@@ -219,9 +270,10 @@ angle. **Do this before believing your eyes on a rendering change.**
 ### Accuracy, measured against JPL Horizons
 | | |
 |---|---|
-| Planets | sub-arcminute; oppositions match published dates |
-| Asteroids | worst 0.72° across 1800–2050 |
-| Moons | 14 of the 19 fitted under 1°, 12 under 0.3°; worst Triton 4.9°, Miranda 4.6°. Our own Moon is the 20th and comes from Schlyter, not a fit |
+| Planets | inner four ≤0.5′; Jupiter ≤8.6′, Saturn ≤12.3′ (Standish's own allowances: 400″/600″) |
+| Asteroids | Vesta 0.36°, Ceres 0.57°, Juno 0.85°, Pallas 2.5° at worst decade |
+| Moons | 14 of 19 fitted ≤1° at worst; Charon 0.2′, Io 3.3′; worst Triton 5.3°, Miranda 4.9°, Phobos 3.6°. Our Moon ≤5.6′ (Schlyter + precession fix) |
+| Planet faces | sub-solar points vs Horizons: ≤0.05° everywhere once Delta T is allowed for |
 | Sunrise/sunset | within 1 minute of published NYC times |
 | Sub-solar point | 0.0001° at solstices |
 | Eclipse path | 137–143 km off NASA's centre line (2027-08-02), 226–239 km (2024-04-08) |
